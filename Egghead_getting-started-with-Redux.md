@@ -217,3 +217,43 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
 
 
 https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/09-Reducer_Composition_with_Objects.md
+
+### 15. Reducer Composition with combineReducers()
+
+```JavaScript
+import { combineReducers } from 'react-redux';
+const todoApp = combineReducers({
+  todos,
+  visibilityFilter
+});
+```
++ The previous section's top level reducer declaration can be replaced with much convenient utility function __combineReducers()__
++ The only argument to combineReducers() is an object that specifies the mapping between the state field names and the reducers that manage them.
+
+### 16. Implementing combineReducers() from Scratch
+>It's important to understand __functional programming__. Functions can take other functions as arguments, and return other functions. Knowing this will increase productivity with Redux in the long term.
+
++ https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/11-Implementing_combineReducers_from_Scratch.md
+
+### 17.
+```JavaScript
+<input ref={node => {
+  this.input = node;
+}} />
+<button onClick={() => {
+  store.dispatch({
+    type: 'ADD_TODO',
+    text: this.input.value,
+    id: nextTodoId++
+  });
+  this.input.value = '';
+}}>
+```
+
++ Course uses __ref callback on input element__ rather than managing local state as a logical presentational component. This is different than the Treehouse course, but also seems to be somewhat common as a way to handle local state on an input.
+>We'll use React's callback __ref()__ API. ref() is a function that gets the node corresponding to the ref, which we'll save with the name _this.input_
+
+### 19. Filtering todos
+
++   {children}
+    </a>
