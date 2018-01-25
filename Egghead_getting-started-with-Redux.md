@@ -255,5 +255,99 @@ const todoApp = combineReducers({
 
 ### 19. Filtering todos
 
-+   {children}
+```JavaScript
+const FilterLink = ({
+  filter,
+  currentFilter,
+  children
+}) => {
+  if (filter === currentFilter) {
+    return <span>{children}</span>
+  }
+  return (
+    <a href='#'
+       onClick={e => {
+         e.preventDefault();
+         store.dispatch({
+           type: 'SET_VISIBILITY_FILTER',
+           filter
+         });
+       }}
+    >
+      {children}
     </a>
+  )
+}
+```
++ Presentational/functional component that dispatches an action
++ __const FilterLink = ({filter, children}) => {...}__ destructuring the _filter_ and _children_ props here allows them to be used within the component without something like _props.filter_
++ __{children}__ allows _consumer_ to insert their own text inside anchor
++ Inline onClick function isn't the clearest to me. Weird because it's not reusable if we wanted to dispatch that action on another element.
+  + I prefer the bound action creators from Treehouse tutorial
+
+
+```JavaScript
+//In TodoApp component
+<p>
+  Show:
+  {' '}
+  <FilterLink
+    filter='SHOW_ALL'
+    currentFilter={visibilityFilter}
+  >
+    All
+  </FilterLink>
+  {' '}
+  <FilterLink
+    filter='SHOW_ACTIVE'
+    currentFilter={visibilityFilter}
+  >
+    Active
+  </FilterLink>
+  {' '}
+  <FilterLink
+    filter='SHOW_COMPLETED'
+    currentFilter={visibilityFilter}
+  >
+    Completed
+  </FilterLink>
+</p>
+.
+```
++ Using _FilterLink_ several times in app and setting the metadata value via _filter_ prop for the unnamed action dispatched by onClick in FilterLink
+
+```JavaScript
+const getVisibleTodos = (
+  todos,
+  filter
+) => {
+  switch (filter) {
+    case 'SHOW_ALL':
+      return todos;
+    case 'SHOW_COMPLETED':
+      return todos.filter(
+        t => t.completed
+      );
+    case 'SHOW_ACTIVE':
+      return todos.filter(
+        t => !t.completed
+      );
+  }
+}
+```
++ Reducer for filtering todos
+
+```JavaScript
+class TodoApp extends Component {
+  render() {
+    const {
+      todos,
+      visibilityFilter
+    } = this.props;
+    const visibleTodos = getVisibleTodos(
+      todos,
+      visibilityFilter
+    );
+    return (
+  ```
++ __visibleTodos__ is what gets rendered inside the UL
