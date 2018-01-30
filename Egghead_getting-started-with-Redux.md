@@ -1,7 +1,37 @@
 ## Getting Started with Redux
 https://egghead.io/courses/getting-started-with-redux
+
 https://github.com/tayiorbeii/egghead.io_redux_course_notes
 
+https://redux.js.org/docs/basics/ExampleTodoList.html
+
+## TO FLAG
+
+27
+Typo: We also created a function mapDispatchToProps that maps the store's dispatch() method of
+
+30
+Typo: component will a call to
+
+### Key concepts
++ Reducer composition
+  + combineReducers({})
++ Distinction between container and presentational components
++ mapDispatchToProps()
+
+### Questions
++ Why is connect being used in so many places?
++ Just because there are many more container components than Treehouse tutorial?
++ Why is _mapDispatchToProps_ not a part of the Treehouse tutorial?
+_Map out he data flow of this app just like the Treehouse one to think through_
+
+```JavaScript
+connect(
+  mapStateProps,
+  mapDispatchProps
+  ```
+
+##### Dependencies
 + __deepFreeze__ is being used to ensure no mutations and therefor pure functions
 + Michael Jackson's __expect__ package. which seems to be folded into __Jest__ now, is used for __assertion testing__
 
@@ -202,6 +232,7 @@ const todos = (state = [], action) => {
 };
 ```
 + This reducer handles the _todos_ array and uses the _todo_ reducer to call for updated state for individual items
++ __Reducer composition__
 
 ```JavaScript
 const visibilityFilter = (state = 'SHOW_ALL', action) => {
@@ -229,6 +260,7 @@ const todoApp = combineReducers({
 ```
 + The previous section's top level reducer declaration can be replaced with much convenient utility function __combineReducers()__
 + The only argument to combineReducers() is an object that specifies the mapping between the state field names and the reducers that manage them.
+  + In this example, the state field names and their reducers have the same name, so we can reduce _todos: todos_ to a single reference
 
 ### 16. Implementing combineReducers() from Scratch
 >It's important to understand __functional programming__. Functions can take other functions as arguments, and return other functions. Knowing this will increase productivity with Redux in the long term.
@@ -351,3 +383,232 @@ class TodoApp extends Component {
     return (
   ```
 + __visibleTodos__ is what gets rendered inside the UL
+
+### 22. Extracting Container Components (FilterLink)
+
+__Refactoring FilterLink to extract Link as a presentational component__
+
+>Inside of the FilterLink definition, we don't currently specify behavior for clicking on the link. It also needs to know the current filter so it can render the item appropriately. Because of this, __we can't say FilterLink is presentational, because it is inseparable from its behavior__. The only reasonable behavior is to dispatch an action (SET_VISIBILITY_FILTER) upon clicking. This is __an opportunity to split this into a more concise presentational component, with a wrapping container component to manage the logic and the presentational component being used for rendering__.
+Therefore, we will start by converting our current FilterLink into a presentational component called Link.
+The new Link presentational component doesn't know anything about the filter-- it only accepts the active prop, and calls its onClick handler. Link is only concerned with rendering.
+Therefore, we will start by converting our current FilterLink into a presentational component called Link.
+
+```JavaScript
+const Link = ({
+  active,
+  children,
+  onClick
+}) => {
+  if (active) {
+    return <span>{children}</span>
+  }
+
+  return (
+    <a href='#'
+      onClick={e => {
+        e.preventDefault();
+        onClick();
+      }}
+    >
+      {children}
+    </a>
+  );
+};
+```
++ Interesting that _Link_ is literally just an element (span or anchor) with some attributes
++ __Presentational component__ here is just markup
+
+```JavaScript
+const mapStateToProps = (state, ownProps) => ({
+  active: ownProps.filter === state.visibilityFilter
+})
+
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  onClick: () => {
+    dispatch(setVisibilityFilter(ownProps.filter))
+  }
+})
+
+const FilterLink = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Link)
+```
+>As a __container component__, FilterLink doesn't have its own markup, and it delegates rendering to the Link presentational component.
+In this case, it calculates its active prop by comparing its own filter prop with the visibilityFilter in the Redux store's state.
+
+>The container component also needs to specify the behavior. In this case, the FilterLink specifies that when a particular Link is clicked, we should dispatch an action of the type 'SET_VISIBILITY_FILTER' along with the filter value that we take from the props.
+
+>Remember, the job of all container components is similar: __connect a presentational component to the Redux store + specify the data and behavior that it needs__.
+
++ __connect() injects dispatch() as a prop__ coming from the store
+
+### 23. Extracting Container Components (VisibleTodoList, AddTodo)
+
++ Good recap of the app once container and presentational components are separated out
++ _Footer_ is a presentational component with a child container component in _FilterLink_, which itself has a child presentational component of _Link_
++ Principle of separating container and presentational components is to make data flow clear.
++ Advisable, but __not a pattern that needs to be followed dogmatically__ if it doesn't achieve that aim
+
+### 27. Generating Containers with connect() from React Redux (VisibleTodoList)
+
+```JavaScript
+const getVisibleTodos = (todos, filter) => {
+  switch (filter) {
+    case 'SHOW_ALL':
+      return todos
+    case 'SHOW_COMPLETED':
+      return todos.filter(t => t.completed)
+    case 'SHOW_ACTIVE':
+      return todos.filter(t => !t.completed)
+    default:
+      throw new Error('Unknown filter: ' + filter)
+  }
+}
+
+const mapStateToProps = (state) => ({
+  todos: getVisibleTodos(state.todos, state.visibilityFilter)
+})
+
+const mapDispatchToProps = {
+  onTodoClick: toggleTodo
+}
+
+const VisibleTodoList = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TodoList)
+```
+
+> The result of the __connect__ call is the container component (_VisibleTodoList_) that is going to render the presentational component(_TodoList_)
+
++ __connect() generates container components__
+
+> __mapStateToProps__ maps the Redux store's state to the props of the TodoList component that are related to the data from the Redux store. These props will be updated any time the state changes
+
+> __mapDispatchToProps__ maps the store's dispatch() method and returns the props that use the dispatch method to dispatch actions. So it returns the callback props needed by the presentational component. It specifies the behavior of which callback prop dispatches which action.
+
+### 28. Generating Containers with connect() from React Redux (AddTodo)
+```JavaScript
+let AddTodo = ({ dispatch }) => {
+  let input
+
+  return (
+    <div>
+      <form onSubmit={e => {
+        e.preventDefault()
+        if (!input.value.trim()) {
+          return
+        }
+        dispatch(addTodo(input.value))
+        input.value = ''
+      }}>
+        <input ref={node => {
+          input = node
+        }} />
+        <button type="submit">
+          Add Todo
+        </button>
+      </form>
+    </div>
+  )
+}
+AddTodo = connect()(AddTodo)
+```
++ We use _let_ to declare the component because the second _connect_ call (the second pair of parenthesis in the curried function) generates a container component and assigns it to _AddTodo_ (basically overriding the earlier declaration or _reassigning the let binding_)
+
+```JavaScript
+const App = () => (
+  <div>
+    <AddTodo />
+    <VisibleTodoList />
+    <Footer />
+  </div>
+)
+```
++ The _App_ component then is rendering the container component (the reassigned component that's exported), which passes dispatch into its internal presentational component (...weird)
+
+### 29. Generating Containers with connect() from React Redux (FooterLink)
+
+```JavaScript
+const Footer = () => (
+  <p>
+    Show:
+    {" "}
+    <FilterLink filter="SHOW_ALL">
+      All
+    </FilterLink>
+    {", "}
+    <FilterLink filter="SHOW_ACTIVE">
+      Active
+    </FilterLink>
+    {", "}
+    <FilterLink filter="SHOW_COMPLETED">
+      Completed
+    </FilterLink>
+  </p>
+)
+```
+```JavaScript
+const mapStateToProps = (state, ownProps) => ({
+  active: ownProps.filter === state.visibilityFilter
+})
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  onClick: () => {
+    dispatch(setVisibilityFilter(ownProps.filter))
+  }
+})
+const FilterLink = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Link)
+```
+```JavaScript
+const Link = ({ active, children, onClick }) => {
+  if (active) {
+    return <span>{children}</span>
+  }
+  return (
+    // eslint-disable-next-line
+    <a href="#"
+       onClick={e => {
+         e.preventDefault()
+         onClick()
+       }}
+    >
+      {children}
+    </a>
+  )
+}
+Link.propTypes = {
+  active: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func.isRequired
+}
+```
+
++ Good __model of relationships between components__: _Footer_ -> _FilterLink_ -> _Link_
+
+### 30. Extracting Action Creators
+
+```JavaScript
+let nextTodoId = 0
+export const addTodo = (text) => ({
+  type: 'ADD_TODO',
+  id: nextTodoId++,
+  text
+})
+
+export const setVisibilityFilter = (filter) => ({
+  type: 'SET_VISIBILITY_FILTER',
+  filter
+})
+
+export const toggleTodo = (id) => ({
+  type: 'TOGGLE_TODO',
+  id
+})
+```
+> __addTodo__ is only passed is the text of the todo being added. We don't want to generate the id inside of the reducer because that would make it __non-deterministic__.
+
++ Action Creators document the software for others on the team
