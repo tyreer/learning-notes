@@ -24,6 +24,9 @@ Typo: component will a call to
 + Just because there are many more container components than Treehouse tutorial?
 + Why is _mapDispatchToProps_ not a part of the Treehouse tutorial?
 _Map out he data flow of this app just like the Treehouse one to think through_
++ Why does the Todo onclick not involve an explicit dispatch() call?
+  + The action must be dispatched to the Redux store, but why is the syntax different than AddTdo and FilterLink?
++ In which component does each dispatch occur?
 
 ```JavaScript
 connect(
@@ -435,7 +438,9 @@ const FilterLink = connect(
 )(Link)
 ```
 >As a __container component__, FilterLink doesn't have its own markup, and it delegates rendering to the Link presentational component.
-In this case, it calculates its active prop by comparing its own filter prop with the visibilityFilter in the Redux store's state.
+In this case, __it calculates its active prop by comparing its own filter prop with the visibilityFilter in the Redux store's state__.
+
++ __ownProps__ is a little odd to me, but sensible enough
 
 >The container component also needs to specify the behavior. In this case, the FilterLink specifies that when a particular Link is clicked, we should dispatch an action of the type 'SET_VISIBILITY_FILTER' along with the filter value that we take from the props.
 
@@ -487,6 +492,29 @@ const VisibleTodoList = connect(
 > __mapStateToProps__ maps the Redux store's state to the props of the TodoList component that are related to the data from the Redux store. These props will be updated any time the state changes
 
 > __mapDispatchToProps__ maps the store's dispatch() method and returns the props that use the dispatch method to dispatch actions. So it returns the callback props needed by the presentational component. It specifies the behavior of which callback prop dispatches which action.
+
+__Naming actions__:  
+```JavaScript
+const mapDispatchToProps = {
+  onTodoClick: toggleTodo
+}
+...
+onClick={() => onTodoClick(todo.id)}
+```
++ _toggleTodo_ is the action creator, but as a prop it gets renamed to _onTodoClick_ then implemented in the target _onClick()_ method
+
+__Passing props__:
+```JavaScript
+TodoList.propTypes = {
+  todos: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    completed: PropTypes.bool.isRequired,
+    text: PropTypes.string.isRequired
+  }).isRequired).isRequired,
+  onTodoClick: PropTypes.func.isRequired
+}
+```
++ The _arrayOf_ + _shape_ PropTypes help identify the props being passed into each Todo component
 
 ### 28. Generating Containers with connect() from React Redux (AddTodo)
 ```JavaScript
@@ -588,6 +616,16 @@ Link.propTypes = {
 ```
 
 + Good __model of relationships between components__: _Footer_ -> _FilterLink_ -> _Link_
+
+```JavaScript
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  onClick: () => {
+    dispatch(setVisibilityFilter(ownProps.filter))
+  }
+})
+```
++ __dispatch__ is used inline here in _FilterLink_ with an action creator.
++ This is different to how it's used in _AddToDo_
 
 ### 30. Extracting Action Creators
 
