@@ -1,17 +1,11 @@
 ## Getting Started with Redux
 https://egghead.io/courses/getting-started-with-redux
 
-https://github.com/tayiorbeii/egghead.io_redux_course_notes
-
-https://redux.js.org/docs/basics/ExampleTodoList.html
-
-## TO FLAG
-
-27
-Typo: We also created a function mapDispatchToProps that maps the store's dispatch() method of
-
-30
-Typo: component will a call to
+### References
++ https://redux.js.org/docs/basics/ExampleTodoList.html
++ https://redux.js.org/docs/basics/UsageWithReact.html
++ https://github.com/tayiorbeii/egghead.io_redux_course_notes
++ https://css-tricks.com/learning-react-redux/
 
 ### Key concepts
 + Reducer composition
@@ -20,23 +14,59 @@ Typo: component will a call to
 + mapDispatchToProps()
 
 ### Questions
-+ Why is connect being used in so many places?
-+ Just because there are many more container components than Treehouse tutorial?
-+ Why is _mapDispatchToProps_ not a part of the Treehouse tutorial?
-_Map out he data flow of this app just like the Treehouse one to think through_
-+ Why does the Todo onclick not involve an explicit dispatch() call?
-  + The action must be dispatched to the Redux store, but why is the syntax different than AddTdo and FilterLink?
-+ In which component does each dispatch occur?
++ Why is __connect()__ being used in so many places?
+  + Just because there are many more container components than Treehouse tutorial?
 
-```JavaScript
-connect(
-  mapStateProps,
-  mapDispatchProps
+  + Answer:
+  > Early Redux documentation advised that you should only have a few connected components near the top of your component tree. However, time and experience has shown that that generally requires a few components to know too much about the data requirements of all their descendants, and forces them to pass down a confusing number of props.
+  The current suggested best practice is to categorize your components as “presentational” or “container” components, and extract a connected container component wherever it makes sense
+
+    >Try to keep your presentation components separate. Create container components by connecting them when it's convenient. Whenever you feel like you're duplicating code in parent components to provide data for same kinds of children, time to extract a container. __Generally as soon as you feel a parent knows too much about “personal” data or actions of its children, time to extract a container__.
+
+    https://redux.js.org/docs/faq/ReactRedux.html#should-i-only-connect-my-top-component-or-can-i-connect-multiple-components-in-my-tree
+
++ Why is __mapDispatchToProps__ not a part of the Treehouse tutorial?
+
+  + Answer: Redux docs seems to identify it as a bit of an edge case to use __bindActionCreators()__
+    https://redux.js.org/docs/api/bindActionCreators.html
+    https://redux.js.org/docs/basics/Actions.html#action-creators
+
+  + In fact, the Treehouse course designer basically acknowledges that there's little justification for using it in the course...
+    > I would absolutely advocate using the mapDispatchToProps approach as it cleans up your render block and results in better performance due to the fact that the action creators are no longer created every time the container is rendered.
+
+    https://teamtreehouse.com/community/why-is-mapdispatchtoprops-ignored-here
+
++ Why does the Todo onclick not involve an explicit dispatch() call?
+  + The action must be dispatched to the Redux store, but why is the syntax different than AddTodo and FilterLink?
+  ```JavaScript
+  const mapDispatchToProps = {
+      onTodoClick: toggleTodo
+  }
   ```
+  + Answer: The code I'm referencing is just being a bit extra
+  >If an object is passed, each function inside it is assumed to be a Redux action creator. An object with the same function names, but with every action creator wrapped into a dispatch call so they may be invoked directly, will be merged into the component’s props
+
+    https://github.com/reactjs/redux/commit/f56c18c2f6d00016014816d02cdc2f5b29a8da4c#r22674707
+
+  + The Redux docs have a bit more verbose and explicit syntax:
+  ```JavaScript
+    const mapDispatchToProps = dispatch => {
+      return {
+        onTodoClick: id => {
+          dispatch(toggleTodo(id))
+        }
+      }
+    }
+  ```
+
++ In which component does each dispatch occur?
+  + Answer: I'm pretty sure that only the container components ultimately dispatch actions
 
 ##### Dependencies
 + __deepFreeze__ is being used to ensure no mutations and therefor pure functions
 + Michael Jackson's __expect__ package. which seems to be folded into __Jest__ now, is used for __assertion testing__
+
+### Notes
 
 ```JavaScript
 const counter = (state = 0, action) => {
@@ -270,7 +300,7 @@ const todoApp = combineReducers({
 
 + https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/11-Implementing_combineReducers_from_Scratch.md
 
-### 17.
+### 17. React Todo List Example (Adding a Todo)
 ```JavaScript
 <input ref={node => {
   this.input = node;
@@ -454,6 +484,7 @@ In this case, __it calculates its active prop by comparing its own filter prop w
 + _Footer_ is a presentational component with a child container component in _FilterLink_, which itself has a child presentational component of _Link_
 + Principle of separating container and presentational components is to make data flow clear.
 + Advisable, but __not a pattern that needs to be followed dogmatically__ if it doesn't achieve that aim
+  + For instance, _AddTodo_ mixes presentation and logic in a component that is very small, which is fine
 
 ### 27. Generating Containers with connect() from React Redux (VisibleTodoList)
 
@@ -490,6 +521,8 @@ const VisibleTodoList = connect(
 + __connect() generates container components__
 
 > __mapStateToProps__ maps the Redux store's state to the props of the TodoList component that are related to the data from the Redux store. These props will be updated any time the state changes
+
+> To use connect(), you need to define a special function called __mapStateToProps__ that tells how to transform the current Redux store state into the props you want to pass to a presentational component you are wrapping. For example, VisibleTodoList needs to calculate todos to pass to the TodoList, so we define a function that filters the state.todos according to the state.visibilityFilter, and use it in its mapStateToProps:
 
 > __mapDispatchToProps__ maps the store's dispatch() method and returns the props that use the dispatch method to dispatch actions. So it returns the callback props needed by the presentational component. It specifies the behavior of which callback prop dispatches which action.
 
