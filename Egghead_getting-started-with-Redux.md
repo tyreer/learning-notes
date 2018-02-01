@@ -10,6 +10,7 @@ https://egghead.io/courses/getting-started-with-redux
 ### Key concepts
 + Reducer composition
   + combineReducers({})
+  + functional programming
 + Distinction between container and presentational components
 + mapDispatchToProps()
 
@@ -28,7 +29,9 @@ https://egghead.io/courses/getting-started-with-redux
 + Why is __mapDispatchToProps__ not a part of the Treehouse tutorial?
 
   + Answer: Redux docs seems to identify it as a bit of an edge case to use __bindActionCreators()__
+
     https://redux.js.org/docs/api/bindActionCreators.html
+
     https://redux.js.org/docs/basics/Actions.html#action-creators
 
   + In fact, the Treehouse course designer basically acknowledges that there's little justification for using it in the course...
@@ -67,7 +70,7 @@ https://egghead.io/courses/getting-started-with-redux
 + Michael Jackson's __expect__ package. which seems to be folded into __Jest__ now, is used for __assertion testing__
 
 ### Notes
-
+__Reducers__
 ```JavaScript
 const counter = (state = 0, action) => {
   switch (action.type) {
@@ -82,8 +85,10 @@ const counter = (state = 0, action) => {
 ```
 + __If initial state is undefined, we must define what we expect the default state to be__. In this case __state = 0__ sets a sensible initial state for the counter.
 + The final __default case__ in a reducer (here _counter_) handles an unknown action type by simply returning existing state
-+ https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/02-Reducer_and_Store.md#05-writing-a-counter-reducer-with-tests
 
+  https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/02-Reducer_and_Store.md#05-writing-a-counter-reducer-with-tests
+
+__Spread operators + pure functions__
 ```JavaScript
 const removeCounter = (list, index) => {
   //  (Pre-ES6)
@@ -133,7 +138,8 @@ case PlayerActionTypes.UPDATE_PLAYER_SCORE: {
 
 + To update a value at an index, Egghead tutorial uses __spread + slice__, while Treehouse uses __map + match__
 + In Video 12 TOGGLE_TODO uses the _map + match_ as well
-+ https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/05-Avoiding_Array_Mutations.md#09-avoiding-array-mutations
+
+  https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/05-Avoiding_Array_Mutations.md#09-avoiding-array-mutations
 
 ```JavaScript
 const toggleTodo = (todo) => {
@@ -152,10 +158,12 @@ const toggleTodo = (todo) => {
 };
 ```
 + Both of the above do the same, but the __object spread__ syntax on the bottom is clearly preferable
-+ Object spread is used in Treehouse tutorial because they have stage: 0 Babel config
-+ _Object rest spread transform_ is stage 3 in January 18
-+ https://babeljs.io/docs/plugins/transform-object-rest-spread/
-https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/06-Avoiding_Object_Mutations.md
++ Object spread is used in Treehouse tutorial because they have _stage: 0_ Babel config
++ _Object rest spread transform_ is stage 3 in January 2018
+
+  https://babeljs.io/docs/plugins/transform-object-rest-spread/
+
+  https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/06-Avoiding_Object_Mutations.md
 
 ```JavaScript
 {
@@ -212,21 +220,89 @@ console.log('All tests passed')
 
 ### 13. Reducer Composition with Arrays
 
-+ To model __reducer composition__, the course breaks out reducers into:
-  + one that handles changes to state of individual to do items
-  + one that handles changes to state in to do list
+```JavaScript
+const todo = (state, action) => {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return {
+        id: action.id,
+        text: action.text,
+        completed: false
+      };
+    case 'TOGGLE_TODO':
+      if (state.id !== action.id) {
+        return state;
+      }
+
+      return {
+        ...state,
+        completed: !state.completed
+      };
+    default:
+      return state;
+  }
+}
+```
++ Note that in _todo_ state refers to the individual todo, and not the list of todos.
+
+```JavaScript
+const todos = (state = [], action) => {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return [
+        ...state,
+        todo(undefined, action)
+      ];
+    case 'TOGGLE_TODO':
+      return state.map(t => todo(t, action));
+    default:
+      return state;
+  }
+};
+```
+
++ To model __reducer composition__, the course breaks out the to-do reducers into:
+  + one that handles changes to state of individual _to do items_
+  + one that handles changes to state in the entire _to do list_
 + This is different than the Treehouse course, where state is managed for both the individual player and the players list array in one reducer
 
-https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/08-Reducer_Composition_with_Arrays.md
+>What we've just done is a common Redux practice called reducer composition. Different reducers specify how different parts of the state tree are updated in response to actions. Since reducers are normal JS functions, they can call other reducers to delegate & abstract away updates to the state.
+
+>Reducer composition can be applied many times. While there's a single top-level reducer managing the overall state of the app, __it's encouraged to have reducers call each other as needed to manage the state tree__.
+
++ Worth noting as a method, but also note that __this separation seems to be abandoned__ in the eventual project. The __final todos reducer__ makes a bit more sense to me, and it's basically the same as before the two reducers are broken out as modeled above:
+
+```JavaScript
+const todos = (state = [], action) => {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return [
+        ...state,
+        {
+          id: action.id,
+          text: action.text,
+          completed: false
+        }
+      ]
+    case 'TOGGLE_TODO':
+      return state.map(todo =>
+        (todo.id === action.id)
+          ? {...todo, completed: !todo.completed}
+          : todo
+      )
+    default:
+      return state
+  }
+}
+```
+
+  https://github.com/tayiorbeii/egghead.io_redux_course_notes/blob/master/08-Reducer_Composition_with_Arrays.md
 
 ### 14. Reducer Composition with Objects
 
 + A further model of __reducer composition__, this time with an independent reducer for each part of the application state object
 + Application state tree is very similar to Treehouse course at this point (array + string)
 + But the use of reducer composition is very different to the Treehouse course
-
-  >What we've just done is a common Redux practice called reducer composition. Different reducers specify how different parts of the state tree are updated in response to actions. Since reducers are normal JS functions, they can call other reducers to delegate & abstract away updates to the state.
-Reducer composition can be applied many times. While there's a single top-level reducer managing the overall state of the app, __it's encouraged to have reducers call each other__ as needed to manage the state tree.
 
   > __This pattern helps to scale Redux development__, since different team members can work on different reducers that work with the same actions, without stepping on each other's toes.
 
@@ -246,6 +322,7 @@ const todoApp = (state = {}, action) => {
 };
 ```
 + Application reducer, _todoApp_, combines _todos_ and _visibilityFilter_ reducers
++ __Note: above syntax is replaced__ by __combineReducers()__ in next step, but in the above instance it illustrates how the one top-level reducer function calls the two other reducer functions and sets keys based on their values. Useful as a __functional programming example__
 + Initial state in this case ends up being defined by the default values in the child reducer arguments
   + const visibilityFilter = (__state = 'SHOW_ALL'__, action) => {}
 
@@ -293,7 +370,7 @@ const todoApp = combineReducers({
 ```
 + The previous section's top level reducer declaration can be replaced with much convenient utility function __combineReducers()__
 + The only argument to combineReducers() is an object that specifies the mapping between the state field names and the reducers that manage them.
-  + In this example, the state field names and their reducers have the same name, so we can reduce _todos: todos_ to a single reference
+  + __In this example, the state field names and their reducers have the same name__, so we can reduce _todos: todos_ to a single reference
 
 ### 16. Implementing combineReducers() from Scratch
 >It's important to understand __functional programming__. Functions can take other functions as arguments, and return other functions. Knowing this will increase productivity with Redux in the long term.
@@ -345,77 +422,19 @@ const FilterLink = ({
 }
 ```
 + Presentational/functional component that dispatches an action
+  + Note: This gets __refactored into a container component later__
 + __const FilterLink = ({filter, children}) => {...}__ destructuring the _filter_ and _children_ props here allows them to be used within the component without something like _props.filter_
 + __{children}__ allows _consumer_ to insert their own text inside anchor
 + Inline onClick function isn't the clearest to me. Weird because it's not reusable if we wanted to dispatch that action on another element.
-  + I prefer the bound action creators from Treehouse tutorial
+  + I appreciate the eventual use of __mapDispatchToProps__ once this component is turned into a container component
 
-
-```JavaScript
-//In TodoApp component
-<p>
-  Show:
-  {' '}
-  <FilterLink
-    filter='SHOW_ALL'
-    currentFilter={visibilityFilter}
-  >
-    All
-  </FilterLink>
-  {' '}
-  <FilterLink
-    filter='SHOW_ACTIVE'
-    currentFilter={visibilityFilter}
-  >
-    Active
-  </FilterLink>
-  {' '}
-  <FilterLink
-    filter='SHOW_COMPLETED'
-    currentFilter={visibilityFilter}
-  >
-    Completed
-  </FilterLink>
-</p>
-.
-```
-+ Using _FilterLink_ several times in app and setting the metadata value via _filter_ prop for the unnamed action dispatched by onClick in FilterLink
-
-```JavaScript
-const getVisibleTodos = (
-  todos,
-  filter
-) => {
-  switch (filter) {
-    case 'SHOW_ALL':
-      return todos;
-    case 'SHOW_COMPLETED':
-      return todos.filter(
-        t => t.completed
-      );
-    case 'SHOW_ACTIVE':
-      return todos.filter(
-        t => !t.completed
-      );
-  }
-}
-```
-+ Reducer for filtering todos
-
-```JavaScript
-class TodoApp extends Component {
-  render() {
-    const {
-      todos,
-      visibilityFilter
-    } = this.props;
-    const visibleTodos = getVisibleTodos(
-      todos,
-      visibilityFilter
-    );
-    return (
+  ```JavaScript
+  const mapDispatchToProps = (dispatch, ownProps) => ({
+    onClick: () => {
+      dispatch(setVisibilityFilter(ownProps.filter))
+    }
+  })
   ```
-+ __visibleTodos__ is what gets rendered inside the UL
 
 ### 22. Extracting Container Components (FilterLink)
 
@@ -450,6 +469,7 @@ const Link = ({
 ```
 + Interesting that _Link_ is literally just an element (span or anchor) with some attributes
 + __Presentational component__ here is just markup
++ __{children}__ allows _consumer_ to determine the text inside the component
 
 ```JavaScript
 const mapStateToProps = (state, ownProps) => ({
@@ -474,13 +494,13 @@ In this case, __it calculates its active prop by comparing its own filter prop w
 
 >The container component also needs to specify the behavior. In this case, the FilterLink specifies that when a particular Link is clicked, we should dispatch an action of the type 'SET_VISIBILITY_FILTER' along with the filter value that we take from the props.
 
->Remember, the job of all container components is similar: __connect a presentational component to the Redux store + specify the data and behavior that it needs__.
+>Remember, __the job of all container components is similar: connect a presentational component to the Redux store + specify the data and behavior that it needs__.
 
 + __connect() injects dispatch() as a prop__ coming from the store
 
 ### 23. Extracting Container Components (VisibleTodoList, AddTodo)
 
-+ Good recap of the app once container and presentational components are separated out
++ __Video has a good recap of the app__ once container and presentational components are separated out
 + _Footer_ is a presentational component with a child container component in _FilterLink_, which itself has a child presentational component of _Link_
 + Principle of separating container and presentational components is to make data flow clear.
 + Advisable, but __not a pattern that needs to be followed dogmatically__ if it doesn't achieve that aim
@@ -522,9 +542,9 @@ const VisibleTodoList = connect(
 
 > __mapStateToProps__ maps the Redux store's state to the props of the TodoList component that are related to the data from the Redux store. These props will be updated any time the state changes
 
-> To use connect(), you need to define a special function called __mapStateToProps__ that tells how to transform the current Redux store state into the props you want to pass to a presentational component you are wrapping. For example, VisibleTodoList needs to calculate todos to pass to the TodoList, so we define a function that filters the state.todos according to the state.visibilityFilter, and use it in its mapStateToProps:
+> To use connect(), you need to define a special function called __mapStateToProps__ that tells how to transform the current Redux store state into the props you want to pass to a presentational component you are wrapping. For example, __VisibleTodoList needs to calculate todos to pass to the TodoList, so we define a function that filters the state.todos according to the state.visibilityFilter, and use it in its mapStateToProps__
 
-> __mapDispatchToProps__ maps the store's dispatch() method and returns the props that use the dispatch method to dispatch actions. So it returns the callback props needed by the presentational component. It specifies the behavior of which callback prop dispatches which action.
+> __mapDispatchToProps__ maps the store's dispatch() method and returns the props that use the dispatch method to dispatch actions. So __it returns the callback props needed by the presentational component__. __It specifies the behavior of which callback prop dispatches which action__.
 
 __Naming actions__:  
 ```JavaScript
@@ -576,7 +596,7 @@ let AddTodo = ({ dispatch }) => {
 }
 AddTodo = connect()(AddTodo)
 ```
-+ We use _let_ to declare the component because the second _connect_ call (the second pair of parenthesis in the curried function) generates a container component and assigns it to _AddTodo_ (basically overriding the earlier declaration or _reassigning the let binding_)
++ We use _let_ to declare the _AddTodo_ component because the second _connect_ call (the second pair of parenthesis in the curried function) generates a container component and assigns it to _AddTodo_ (basically overriding the earlier declaration or _reassigning the let binding_)
 
 ```JavaScript
 const App = () => (
@@ -649,16 +669,7 @@ Link.propTypes = {
 ```
 
 + Good __model of relationships between components__: _Footer_ -> _FilterLink_ -> _Link_
-
-```JavaScript
-const mapDispatchToProps = (dispatch, ownProps) => ({
-  onClick: () => {
-    dispatch(setVisibilityFilter(ownProps.filter))
-  }
-})
-```
-+ __dispatch__ is used inline here in _FilterLink_ with an action creator.
-+ This is different to how it's used in _AddToDo_
++ Also models the point that __container components (_FilterLink_) are not really written so much as _generated_ by _connect()___ (usually)
 
 ### 30. Extracting Action Creators
 
@@ -680,6 +691,6 @@ export const toggleTodo = (id) => ({
   id
 })
 ```
-> __addTodo__ is only passed is the text of the todo being added. We don't want to generate the id inside of the reducer because that would make it __non-deterministic__.
+> In __addTodo__, the only information that really is passed is the text of the todo being added. We don't want to generate the id inside of the reducer because that would make it __non-deterministic__.
 
 + Action Creators document the software for others on the team
