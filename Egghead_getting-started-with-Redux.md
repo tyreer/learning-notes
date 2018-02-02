@@ -13,6 +13,8 @@ https://egghead.io/courses/getting-started-with-redux
   + functional programming
 + Distinction between container and presentational components
 + mapDispatchToProps()
+  + ownProps
+  + dispatch specifying its action's argument in container components
 
 ### Questions
 + Why is __connect()__ being used in so many places?
@@ -50,6 +52,8 @@ https://egghead.io/courses/getting-started-with-redux
   >If an object is passed, each function inside it is assumed to be a Redux action creator. An object with the same function names, but with every action creator wrapped into a dispatch call so they may be invoked directly, will be merged into the component’s props
 
     https://github.com/reactjs/redux/commit/f56c18c2f6d00016014816d02cdc2f5b29a8da4c#r22674707
+
+    https://github.com/reactjs/react-redux/blob/master/docs/api.md#arguments
 
   + The Redux docs have a bit more verbose and explicit syntax:
   ```JavaScript
@@ -694,3 +698,159 @@ export const toggleTodo = (id) => ({
 > In __addTodo__, the only information that really is passed is the text of the todo being added. We don't want to generate the id inside of the reducer because that would make it __non-deterministic__.
 
 + Action Creators document the software for others on the team
+
+### Highlights
+
+__3 forms of dispatch__
+
+_1. AddTodo_
+```JavaScript
+let AddTodo = ({ dispatch }) => {
+  let input
+
+  return (
+    <div>
+      <form onSubmit={e => {
+        e.preventDefault()
+        if (!input.value.trim()) {
+          return
+        }
+        dispatch(addTodo(input.value))
+        input.value = ''
+      }}>
+        <input ref={node => {
+          input = node
+        }} />
+        <button type="submit">
+          Add Todo
+        </button>
+      </form>
+    </div>
+  )
+}
+AddTodo = connect()(AddTodo)
+```
+
+```JavaScript
+  <form onSubmit={e => {
+    e.preventDefault()
+    ...
+    dispatch(addTodo(input.value))
+    ...
+    }}
+```
+
++ Here, __connect__ injects just __dispatch__ and doesn't listen to store, which is fine because _AddTodo_ only sends data to update the state but is otherwise unaware of existing states
+
+>If you do not supply your own mapDispatchToProps function or object full of action creators, the default mapDispatchToProps implementation just injects dispatch into your component’s props.
+
++ _AddTodo_ is a bit exceptional because there's both presentation and behavior in the same small component
+
+https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
+
+_2. VisibleTodoList_
+
+_A._
+```JavaScript
+const mapDispatchToProps = {
+  onTodoClick: toggleTodo
+}
+```
+_B._
+```JavaScript
+const mapDispatchToProps = dispatch => ({
+    onTodoClick: id => {
+      dispatch(toggleTodo(id))
+    }
+  })
+```
++ Both A. + B. above are the same, just different syntax
+
+```JavaScript
+const VisibleTodoList = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(TodoList)
+```
++ Feels pretty standard to me. Passing in a prop that will dispatch an action with an id argument pulled off the clicked element.
+
+_2.1 TodoList_
+
+```JavaScript
+const TodoList = ({ todos, onTodoClick }) => (
+  <ul>
+    {todos.map(todo =>
+      <Todo
+        key={todo.id}
+        {...todo}
+        onClick={() => onTodoClick(todo.id)}
+      />
+    )}
+  </ul>
+)
+```
+
+```JavaScript
+onClick={() => onTodoClick(todo.id)}
+```
+
+_2.2 Todo_
+
+```JavaScript
+const Todo = ({ onClick, completed, text }) => (
+  <li
+    onClick={onClick}
+    style={{
+      textDecoration: completed ? 'line-through' : 'none'
+    }}
+  >
+    {text}
+  </li>
+)
+```
+
+```JavaScript
+onClick={onClick}
+```
+
+_3. FilterLink_
+
+```JavaScript
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  onClick: () => {
+    dispatch(setVisibilityFilter(ownProps.filter))
+  }
+})
+const FilterLink = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Link)
+```
+
+>If your mapDispatchToProps function is declared as taking two parameters, it will be called with dispatch as the first parameter and __the props passed to the connected component as the second parameter__, and will be re-invoked whenever the connected component receives new props. (The second parameter is normally referred to as __ownProps__ by convention.)
+
+https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options
+
++ Interesting that _setVisibilityFilter_ gets an argument inserted in the container component from props it expects to receive in its declaration
++ I guess this is the same as _onTodoClick_, where the argument is inserted in the container component as well—just two different sources of the argument (state from the store vs. a prop passed in during the component declaration)
+
+_3.1 Link_
+
+```JavaScript
+const Link = ({ active, children, onClick }) => {
+  if (active) {
+    return <span>{children}</span>
+  }
+
+  return (
+    <a href="#"
+       onClick={e => {
+         e.preventDefault()
+         onClick()
+       }}
+    >
+      {children}
+    </a>
+  )
+}
+```
