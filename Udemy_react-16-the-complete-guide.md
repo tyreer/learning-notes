@@ -102,3 +102,85 @@ export default function(props) { // Inside Person.js, so this is the Person comp
 
 + Webpack will automatically recognise that we've imported this file and inject an autoprefixed style tag into our HTML element
   + Will these styles be included if this component is not initialised or rendered to the DOM?
+
+#### Section 4: Understanding the Base Features & Syntax
+
+__50. Rendering Content Conditionally__
+
++ Only simple expressions in JSX brackets, so no _if()_ because no blocks
++ Ternary or short circuiting are options, but might make code a bit convoluted if overused
+
+```js
+{ this.state.isExpanded ?
+    <div>
+      <Person />
+    </div> : null
+}
+```
+
+```js
+{ this.state.isExpanded &&
+    <div>
+      <Person />
+    </div>
+}
+```
+
+__51. Rendering Content Conditionally__
+
++ __Best practice__ is to keep the returned JSX clean and avoid overloading with conditional logic
++ Because a state change will always trigger the _render()_ function, we're sure that simply using _{person}_ in the JSX will be in sync with state
+
+```js
+render() {
+
+  let people = null;
+
+  if(this.state.isExpanded) {
+    people = (
+      <div>
+      { this.state.people.map((person, index) =>
+        <Person
+          key={person.id}
+          addSymbol={this.addSymbol.bind(this, person.symbol[0])} />)}
+      </div>
+    );
+
+    return (
+      <div className="App">
+        <button onClick={this.togglePeople}>Switch Name</button>
+        {person}
+        <input type="text" onChange={this.handleInputChange.bind(this)} value={this.state.textValue} />
+      </div>
+    );
+  }
+```
+
+__56. Lists & Keys__
+
++ Using an _index_ from _map()_ as a key is no good because the index value will change if the data set changes, while a key should be a unique identifier that is consistently associated with a DOM element
+
+__57. Flexible Lists__
+
+```js
+handleInputChange = (e, index) => {...};
+
+...
+
+<Person
+  handleInputChange={(e) => {this.handleInputChange(e, index)}} />
+```
+
++ Using an __arrow function__, the event argument is passed in the arrow function and callback, so it can be the first parameter in the callback function declaration
+
+
+```js
+handleInputChange = (index, e) => {...};
+
+...
+
+<Person
+  handleInputChange={this.handleInputChange.bind(this, index)} />
+```
+
++ Using ___bind_ prepends__ the _index_ argument, so the event parameter (here _e_) must come _after_ the other parameters in the function declaration
