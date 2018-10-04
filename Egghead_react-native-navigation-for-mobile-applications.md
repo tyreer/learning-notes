@@ -170,3 +170,76 @@ const RootNavigator = createStackNavigator(
   }
 );
 ```
+
+### [Override default transition with createStackNavigator + transitionConfig](https://github.com/eggheadio-projects/react-native-navigation-for-mobile-applications/blob/08-react-native-override-default-transitions-in-react-native-with-stacknavigator-s-transitionconfig-object/App/custom-transition/index.js)
+
++ The navigator has a __transitionConfig__, which is passed as a second argument
+
+```js
+const MainAppStack = createStackNavigator({
+  Home: {
+    screen: Home,
+  ...
+}, {
+  transitionConfig: () => {
+    return {
+      transitionSpec: {
+        duration: 300,
+        easing: Easing.out(Easing.poly(4)),
+        timing: Animated.timing,
+      },
+      containerStyle: {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      },
+    };
+  },
+});
+```
+
+
+### [Build fine grained screen transitions with a custom React navigation interpolator](https://github.com/eggheadio-projects/react-native-navigation-for-mobile-applications/blob/09-react-native-build-fine-grained-screen-transitions-with-a-custom-react-navigation-interpolator/App/custom-screen-interpolator/index.js)
+
+```js
+transitionConfig: () => {
+    return {
+      transitionSpec: {
+        ...
+      },
+      screenInterpolator: interpolator,
+      headerTitleInterpolator: interpolator,
+      headerLeftInterpolator: interpolator,
+      headerRightInterpolator: interpolator,
+    };
+  },
+});
+```
+
+```js
+const interpolator = (sceneProps) => {
+  const { layout, position, scene } = sceneProps;
+
+  const opacity = position.interpolate({
+    inputRange: [scene.index - 1, scene.index, scene.index + 1],
+    outputRange: [0, 1, 0],
+  });
+
+  const scale = position.interpolate({
+    inputRange: [scene.index - 1, scene.index, scene.index + 1],
+    outputRange: [0.8, 1, 1],
+  });
+
+  const height = layout.initHeight;
+  const translateY = position.interpolate({
+    inputRange: [scene.index - 1, scene.index, scene.index + 1],
+    outputRange: [height, 0, 0],
+  });
+
+  return {
+    opacity,
+    transform: [
+      { scale },
+      { translateY },
+    ],
+  }
+}
+```
