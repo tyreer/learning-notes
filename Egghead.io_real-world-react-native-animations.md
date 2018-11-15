@@ -3,7 +3,7 @@ https://egghead.io/courses/real-world-react-native-animations
 Course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
 
 
-### [Create a Horizontal Parallax ScrollView in React Native](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
+## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
 
 ```js
    <ScrollView
@@ -63,7 +63,7 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
           ```
 + Counter intuitive for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
 
-### [Animate a React Native Information Callout View](https://github.com/browniefed/examples/tree/realworld/momentcallout)
+## [Animate a React Native Information Callout View](https://github.com/browniefed/examples/tree/realworld/momentcallout)
 
 ```js
 class Moment extends Component {
@@ -111,8 +111,8 @@ componentWillMount() {
 ```
 
 + The single animated value, `scale: new Animated.Value(1)`, is driving four animations
-+ The `inputRange` makes sense for _scale_, and is simply interpolated for all the other values it needs to drive
-
++ The `inputRange` of 1–0.9 is directly applicable to the animated _scale_ value, and is simply interpolated for all the other values it needs to drive
+  > "We'll ... rely heavily on interpolate to coordinate the sliding of the card, and scaling image animations."
 
 
 ```js
@@ -138,3 +138,50 @@ componentWillMount() {
 + `TouchableWithoutFeedback` wraps the title text
 +  `handlePress()` triggers the animations and sets the `scrollEnabled` flag in _App.js_
     + `scrollEnabled` is translated to `focused` within _Moment.js_
+
+## [Bounce a Heart Shaped Button in React Native on Press](https://egghead.io/lessons/react-bounce-a-heart-shaped-button-in-react-native-on-press)
+
+```js
+triggerLike() {
+    this.setState({
+      liked: !this.state.liked
+    });
+    Animated.spring(this.state.scale, {
+      toValue: 2,
+      friction: 3
+    }).start(() => {
+      this.state.scale.setValue(0);
+    });
+  }
+```
++ `Animated.spring` provides bouncy character
+  + Resets to zero via `start()`
+
+```js
+render() {
+  const bouncyHeart = this.state.scale.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [1, 0.8, 1]
+  });
+  const heartButtonStyle = {
+    transform: [{ scale: bouncyHeart }]
+};
+``` 
++ `interpolate` takes the spring-driven value and maps it to useful scale transform values
+
+```js
+return (
+    <View style={styles.container}>
+      <View>
+        <TouchableWithoutFeedback onPress={this.triggerLike}>
+          <Animated.View style={heartButtonStyle}>
+            <Heart filled={this.state.liked} />
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </View>
+    </View>
+  );
+```
+
++ Interesting how the concerns are separated between `TouchableWithoutFeedback` and `Animated.View`
+  + The `Animated.View` containing the `Heart` scales up rather than it's children
