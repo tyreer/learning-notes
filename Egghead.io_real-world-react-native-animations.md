@@ -185,3 +185,113 @@ return (
 
 + Interesting how the concerns are separated between `TouchableWithoutFeedback` and `Animated.View`
   + The `Animated.View` containing the `Heart` scales up rather than it's children
+
+## [Create An Exploding Heart Button in React Native](https://egghead.io/lessons/react-create-an-exploding-heart-button-in-react-native)
+
+```js
+this.state = {
+    liked: false,
+    scale: new Animated.Value(0),
+    animations: [
+      new Animated.Value(0),
+      new Animated.Value(0),
+      new Animated.Value(0),
+      new Animated.Value(0),
+      new Animated.Value(0),
+      new Animated.Value(0)
+    ]
+  };
+```
++ Each heart gets its own `Animated.Value`
+
+```js
+const getTransformationAnimation = (
+  animation,
+  scale,
+  y,
+  x,
+  rotate,
+  opacity
+) => {
+  const scaleAnimation = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, scale]
+  });
+
+  const xAnimation = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, x]
+  });
+
+  const yAnimation = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, y]
+  });
+
+  const rotateAnimation = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", rotate]
+  });
+
+  const opacityAnimation = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, opacity]
+  });
+
+  return {
+    opacity: opacityAnimation,
+    transform: [
+      { scale: scaleAnimation },
+      { translateX: xAnimation },
+      { translateY: yAnimation },
+      { rotate: rotateAnimation }
+    ]
+  };
+};
+```
++ Interesting factory combining most/all natively animatable style properties
+
+
+```js
+const showAnimations = this.state.animations.map(animation => {
+    return Animated.spring(animation, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true
+    });
+  });
+```
++ On the way out, the hearts have a spring/bounce easing
+
+```js
+const hideAnimations = this.state.animations
+  .map(animation => {
+    return Animated.timing(animation, {
+      toValue: 0,
+      duration: 50,
+      useNativeDriver: true
+    });
+  })
+  .reverse();
+```
++ On the way back in, the hearts have a linear easing
++ `reverse()` here is _not_ a part of the Animated API, but an __array__ method telling all the animations from earlier to run in a reversed sequence
+
+```js
+   Animated.parallel([
+      Animated.spring(this.state.scale, {
+        toValue: 2,
+        friction: 3,
+        useNativeDriver: true  
+      }),
+      Animated.sequence([
+        Animated.stagger(50, showAnimations),
+        Animated.delay(100),
+        Animated.stagger(50, hideAnimations)
+      ])
+    ]).start(() => {
+      this.state.scale.setValue(0);
+    });
+  ```
++ Nice model of `parallel()`, `sequence()`, and `stagger()` used to coordinate a several different animations
++ Also the one place with a `start()` invocation
