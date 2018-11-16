@@ -139,7 +139,7 @@ componentWillMount() {
 +  `handlePress()` triggers the animations and sets the `scrollEnabled` flag in _App.js_
     + `scrollEnabled` is translated to `focused` within _Moment.js_
 
-## [Bounce a Heart Shaped Button in React Native on Press](https://egghead.io/lessons/react-bounce-a-heart-shaped-button-in-react-native-on-press)
+## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
 
 ```js
 triggerLike() {
@@ -186,7 +186,7 @@ return (
 + Interesting how the concerns are separated between `TouchableWithoutFeedback` and `Animated.View`
   + The `Animated.View` containing the `Heart` scales up rather than it's children
 
-## [Create An Exploding Heart Button in React Native](https://egghead.io/lessons/react-create-an-exploding-heart-button-in-react-native)
+## [Create An Exploding Heart Button in React Native](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
 
 ```js
 this.state = {
@@ -295,3 +295,118 @@ const hideAnimations = this.state.animations
   ```
 + Nice model of `parallel()`, `sequence()`, and `stagger()` used to coordinate a several different animations
 + Also the one place with a `start()` invocation
+
+
+## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/browniefed/examples/tree/realworld/fab)
+[springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
+
+```js
+  this.state = {
+      animate: new Animated.Value(0),
+      fabs: [
+        new Animated.Value(0),
+        new Animated.Value(0),
+        new Animated.Value(0)
+      ]
+    };
+```
++ Two sets of animations
+
+```js
+handlePress() {
+  const toValue = this.open ? 0 : 1;
+  const flyouts = this.state.fabs.map((value, i) => {
+    return Animated.spring(value, {
+      toValue: (i + 1) * -90 * toValue,
+      friction: 6
+    });
+  });
+
+  Animated.parallel([
+    Animated.timing(this.state.animate, {
+      toValue,
+      duration: 300
+    }),
+    Animated.stagger(30, flyouts)
+  ]).start();
+
+  this.open = !this.open;
+}
+```
++ `parallel()` starts both sets of animations
+  + `timing` provides default _inOut_ easing for the 3 animations driven by the `animate` value in state
+  + `flyouts` have spring easing with a height/transformY determined by each element's index
+
+```js
+  render() {
+    const backgroundInterpolate = this.state.animate.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["rgb(90, 34, 153)", "rgb(36, 11, 63)"]
+    });
+    const backgroundStyle = {
+      backgroundColor: backgroundInterpolate
+    };
+    const fabColorInterpolate = this.state.animate.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["rgb(24,214,255)", "rgb(255,255,255)"]
+    });
+
+    const fabRotate = this.state.animate.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["0deg", "135deg"]
+    });
+
+    const fabStyle = {
+      backgroundColor: fabColorInterpolate,
+      transform: [
+        {
+          rotate: fabRotate
+        }
+      ]
+    };
+  ```
+
+  + __animate__ drives 3 animated values
+    + 1 on the container
+    + 2 on the "fab" (floating action button)
+    + interpolations model how different units (rgb, rgba, deg) can be driven by a single input
+
+```js
+return (
+  <Animated.View style={[styles.container, backgroundStyle]}>
+    <View style={styles.position}>
+      {this.state.fabs.map((animation, i) => {
+        return (
+          <TouchableOpacity
+            key={i}
+            style={[
+              styles.button,
+              styles.fab,
+              styles.flyout,
+              getTransformStyle(animation)
+            ]}
+            onPress={this.handlePress}
+          />
+        );
+      })}
+      <TouchableOpacity onPress={this.handlePress}>
+        <Animated.View style={[styles.button, fabStyle]}>
+          <Text style={styles.plus}>+</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    </View>
+  </Animated.View>
+);
+```
++ `backgroundStyle` + `fabStyle` driven by __animate__
+
++ __getTransformStyle(animation)__ is just driving a single style attribute
+  + Each animation passed in has been initialized in `handlePress`, and only the `transform` property is being returned
+
+```js
+const getTransformStyle = animation => {
+  return {
+    transform: [{ translateY: animation}]
+  };
+};
+``` 
