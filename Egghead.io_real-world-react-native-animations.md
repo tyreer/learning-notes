@@ -1,5 +1,6 @@
 # Notes on Real World React Native Animations
 https://egghead.io/courses/real-world-react-native-animations
+
 Course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
 
 
@@ -486,40 +487,51 @@ this.panResponder = PanResponder.create({
 
 
 ```js
-   onPanResponderRelease: (e, gestureState) => {
-        const { dy } = gestureState;
+ onPanResponderRelease: (e, gestureState) => {
+    const { dy } = gestureState;
 
-        // Animate away over the top
-        if (dy < -150) {
-          Animated.parallel([
-            Animated.timing(this.animated, {
-              toValue: -400,
-              duration: 150
-            }),
-            Animated.timing(this.animatedMargin, {
-              toValue: 0,
-              duration: 150
-            })
-          ]).start();
-          //Animate back to start position
-        } else if (dy > -150 && dy < 150) {
-          Animated.parallel([
-            Animated.timing(this.animated, {
-              toValue: 0,
-              duration: 150
-            }),
-            Animated.timing(this.animatedMargin, {
-              toValue: 0,
-              duration: 150
-            })
-          ]).start();
-        } else if (dy > 150) {
-          Animated.parallel([
-            Animated.timing(this.animated, {
-              toValue: 400,
-              duration: 300
-            })
-          ]).start();
-        }
-      }
-      ```
+    // Animate away as a "swipe up"
+    // Opacity and translateY are animated
+    if (dy < -150) {
+      Animated.parallel([
+        Animated.timing(this.animated, {
+          toValue: -400,
+          duration: 150
+        })
+      ]).start();
+      // Animate back to start position as a "bounce back on release"
+      // Values beneath the threshold have moved the container already
+      // but on release, the vertical offsets will reverse back to neutral
+    } else if (dy > -150 && dy < 150) {
+      Animated.parallel([
+        Animated.timing(this.animated, {
+          toValue: 0,
+          duration: 150
+        }),
+        Animated.timing(this.animatedMargin, {
+          toValue: 0,
+          duration: 150
+        })
+      ]).start();
+    } else if (dy > 150) {
+      Animated.parallel([
+        Animated.timing(this.animated, {
+          toValue: 400,
+          duration: 300
+        })
+      ]).start();
+    }
+  }
+});
+```
++ 150 is set as an arbitrary threshold to determine the length of the drag
++ In each condition, some animation will have rendered while the touch was engaged 
+  + The release resolves the animation from its current state to its finished state
+
+```js
+const opacityInterpolate = this.animated.interpolate({
+  inputRange: [-400, 0, 400],
+  outputRange: [0, 1, 0]
+});
+```
++ Sharing the animated value's inputRange by interpolating down to a very different value
