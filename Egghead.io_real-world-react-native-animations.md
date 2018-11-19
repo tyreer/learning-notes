@@ -627,3 +627,68 @@ const wobbleInterpolate = animation.interpolate({
 
 + __extrapolate: "clamp"__ on `scaleInterpolate` 
   + nice model of only using the first portion of an `inputRange` then leaving a value static ("clamped")
+
+## [Toggle Hidden Details on a React Native Event Card](https://github.com/browniefed/examples/tree/realworld/eventcard)
+[toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
+ 
+  
+```js
+constructor(props) {
+  super(props);
+  this.state = {
+    open: false,
+    animated: new Animated.Value(0)
+  };
+  this.toggleCard = this.toggleCard.bind(this);
+}
+
+toggleCard() {
+  this.setState(
+    state => ({
+      open: !state.open
+    }),
+    () => {
+      const toValue = this.state.open ? 1 : 0;
+      Animated.timing(this.state.animated, {
+        toValue,
+        duration: 500
+      }).start();
+    }
+  );
+}
+```
++ Coordination of toggled `open` state with the `toValue` via `setState()` callback
+
+```js
+const offsetInterpolate = this.state.animated.interpolate({
+  inputRange: [0, 1],
+  outputRange: [191, 0]
+});
+
+const offsetStyle = {
+  transform: [ { translateY: offsetInterpolate } ]
+};
+```
+
+```js
+ <ImageBackground
+    source={Portland}
+    resizeMode="cover"
+    style={styles.background}
+  >
+    <Animated.View style={[styles.card, offsetStyle]}>
+```
+
+```js
+  background: {
+    width: 300,
+    height: 250,
+    borderRadius: 3,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,.5)"
+  },
+  ```
+
++ `offsetStyle` matches up with `styles.card`, which begins at a 191 _translateY_
++ `ImageBackground` clips via `overflow: hidden` and a fixed height
