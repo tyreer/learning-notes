@@ -535,3 +535,95 @@ const opacityInterpolate = this.animated.interpolate({
 });
 ```
 + Sharing the animated value's inputRange by interpolating down to a very different value
+
+## [Create a Tap to Show Love React Native Animation](https://github.com/browniefed/examples/tree/realworld/periscoped)
+[tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
+
+```js
+ handleAddHeart() {
+    const animation = new Animated.Value(0);
+    this.setState(
+      state => ({
+        hearts: [
+          ...state.hearts,
+          { animation, start: getRandomInt(100, width - 100) }
+        ]
+      }),
+      () => {
+        Animated.timing(animation, {
+          toValue: height,
+          duration: 3000
+        }).start();
+      }
+    );
+  }
+```
++ `setState` callback used to ensure heart is a part of state before beginning animation 
+
+```js
+<View style={StyleSheet.absoluteFill}>
+```
++ __StyleSheet.absoluteFill__: "position absolute and zero positioning"
+
+```js
+<TouchableWithoutFeedback onPress={this.handleAddHeart}>
+  <View style={StyleSheet.absoluteFill}>
+    {this.state.hearts.map(({ animation, start }, index) => {
+     
+...
+      const heartStyle = {
+        left: start,
+        transform: [
+          { translateY: positionInterpolate },
+          { translateX: wobbleInterpolate },
+          { scale: scaleInterpolate }
+        ],
+        opacity: opacityInterpolate
+      };
+
+      return <Heart key={index} style={heartStyle} />;
+    })}
+  </View>
+</TouchableWithoutFeedback>
+```
+
++ Mapping over a set of animations
+  + `animation` contains the driving value from 0–height
+  + `start` is the randomized left offset
+
+```js
+const positionInterpolate = animation.interpolate({
+  inputRange: [0, height],
+  outputRange: [height - 50, 0]
+});
+
+const opacityInterpolate = animation.interpolate({
+  inputRange: [0, height - 200],
+  outputRange: [1, 0]
+});
+
+const scaleInterpolate = animation.interpolate({
+  inputRange: [0, 15, 30],
+  outputRange: [0, 1.2, 1],
+  extrapolate: "clamp"
+});
+
+const dividedHeight = height / 6;
+
+const wobbleInterpolate = animation.interpolate({
+  inputRange: [
+    0,
+    dividedHeight * 1,
+    dividedHeight * 2,
+    dividedHeight * 3,
+    dividedHeight * 4,
+    dividedHeight * 5,
+    dividedHeight * 6
+  ],
+  outputRange: [0, 15, -15, 15, -15, 15, -15],
+  extrapolate: "clamp"
+});
+```
+
++ __extrapolate: "clamp"__ on `scaleInterpolate` 
+  + nice model of only using the first portion of an `inputRange` then leaving a value static ("clamped")
