@@ -410,3 +410,116 @@ const getTransformStyle = animation => {
   };
 };
 ``` 
+
+## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/browniefed/examples/tree/realworld/commentmodal)
+[swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
+
+```js
+<ScrollView
+  scrollEventThrottle={16}
+  onScroll={event => {
+    this.scrollOffset = event.nativeEvent.contentOffset.y;
+    this.scrollViewHeight =
+      event.nativeEvent.layoutMeasurement.height;
+  }}
+  onContentSizeChange={(contentWidth, contentHeight) =>
+    (this.contentHeight = contentHeight)
+  }
+>
+```
++ `ScrollView` updates `this.scrollOffset` and `this.scrollViewHeight` (plus `this.contentHeight`)
+
+
+```js
+<Animated.View
+  style={[styles.modal, modalStyle]}
+  {...this.panResponder.panHandlers}
+>
+  <View style={styles.comments}>
+    <ScrollView
+```
++ `Animated.View` is connected with the `panResponder` by spreading `panHandlers` as props
+
+
+```js
+this.panResponder = PanResponder.create({
+```
+
++ Model of `panResponder` + its crazy `create()` parameter ([docs ref](https://facebook.github.io/react-native/docs/panresponder#create))
+
+```js
+this.panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        const { dy } = gestureState;
+        const totalScrollHeight = this.scrollOffset + this.scrollViewHeight;
+
+        if (
+          (this.scrollOffset <= 0 && dy > 0) ||
+          (totalScrollHeight >= this.contentHeight && dy < 0)
+        ) {
+          return true;
+        }
+      },
+```
+
++ __dy__ - accumulated distance of the gesture since the touch started
+  + Scroll up (swiping down) = positive
+  + Scroll down (swipe up) = negative
+
++ `(this.scrollOffset <= 0 && dy > 0)` = scrolling up when already at the top of the view
++ `(totalScrollHeight >= this.contentHeight && dy < 0)` = scrolling down when already at the bottom of the view 
++ Essentially this is a big _if-_ statement triggering the functions below
+
+```js
+  onPanResponderMove: (e, gestureState) => {
+    const { dy } = gestureState;
+    if (dy < 0) {
+      this.animated.setValue(dy);
+    } else if (dy > 0) {
+      this.animatedMargin.setValue(dy);
+    }
+  },
+```
++ If __scrolling down__ set `animated`, which begin driving _opacity_ and _translateY_ 
++ If __scrolling up__ set `animatedMargin`, which begins driving the _marginTop_ 
++ __Both__ are animated via `onPanResponderRelease()` if the scroll is large enough 
+
+
+```js
+   onPanResponderRelease: (e, gestureState) => {
+        const { dy } = gestureState;
+
+        // Animate away over the top
+        if (dy < -150) {
+          Animated.parallel([
+            Animated.timing(this.animated, {
+              toValue: -400,
+              duration: 150
+            }),
+            Animated.timing(this.animatedMargin, {
+              toValue: 0,
+              duration: 150
+            })
+          ]).start();
+          //Animate back to start position
+        } else if (dy > -150 && dy < 150) {
+          Animated.parallel([
+            Animated.timing(this.animated, {
+              toValue: 0,
+              duration: 150
+            }),
+            Animated.timing(this.animatedMargin, {
+              toValue: 0,
+              duration: 150
+            })
+          ]).start();
+        } else if (dy > 150) {
+          Animated.parallel([
+            Animated.timing(this.animated, {
+              toValue: 400,
+              duration: 300
+            })
+          ]).start();
+        }
+      }
+      ```
