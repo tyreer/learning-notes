@@ -1,24 +1,41 @@
 # Notes on Real World React Native Animations
 https://egghead.io/courses/real-world-react-native-animations
 
-Course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
+Notes on the course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
+
+__Example titles link to source code__
+
+On Android devices, all examples are accessible via Expo:
++ [horizontal-parallax-scrollview](https://exp.host/@tyreer/horizontal-parallax-scrollview)
++ [information-callout](https://exp.host/@tyreer/information-callout)
++ [bouncy-heart](https://exp.host/@tyreer/bouncy-heart)
++ [springy-menu](https://exp.host/@tyreer/springy-menu)
++ [swipe-away-modal](https://exp.host/@tyreer/swipe-away-modal)
++ [tap-to-love](https://exp.host/@tyreer/tap-to-love)
++ [toggle-hidden-details](https://exp.host/@tyreer/toggle-hidden-details)
++ [input-with-success](https://exp.host/@tyreer/input-with-success)
++ [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
+
+On iOS devices, you'll need to:
++ download the source code
++ install dependencies by running `yarn`
++ start a local server by running `expo start` 
 
 
 ## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/tyreer/react-native-animations/tree/horizontal-parallax-scrollview)
 
-[horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
++ With an Android device, you can run [horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
 
 ```js
-   <ScrollView
-          pagingEnabled
-          horizontal
-          scrollEventThrottle={16}
-          onScroll={Animated.event([
-            { nativeEvent: { contentOffset: { x: this.state.animatedScroll } } }
-          ])}
-        >
+<ScrollView
+  pagingEnabled
+  horizontal
+  scrollEventThrottle={16}
+  onScroll={Animated.event([
+    { nativeEvent: { contentOffset: { x: this.state.animatedScroll } } }
+  ])}
+>
 ```
 + `pagingEnabled`: When true, the scroll view stops on multiples of the scroll view's size when scrolling. This can be used for horizontal pagination.
 
@@ -31,7 +48,7 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
   const inputRange = [
     i - 1 * width, // -1 * width // - 414
     i * width, // 0 or width // 0 // When at width we do don't translate
-    (i + 1) * width // 1 * width // 828 // when we swipe past we will translate 150 left on prev picutre
+    (i + 1) * width // 1 * width // 828 // when we swipe past we will translate 150 left on prev picture
   ];
 
   const outputRange = i === 0 ? [0, 0, 150] : [-300, 0, 150];
@@ -45,34 +62,34 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
 ```
 
 ```js
-  {Images.map((image, i) => {
-            return (
-              <Moment
-                key={i}
-                {...image}
-                translateX={getInterpolate(
-                  this.state.animatedScroll,
-                  i,
-                  Images.length
-                )}
-              />
-            );
+{Images.map((image, i) => {
+  return (
+    <Moment
+      key={i}
+      {...image}
+      translateX={getInterpolate(
+        this.state.animatedScroll,
+        i,
+        Images.length
+      )}
+    />
+  );
 ```
 + The is all for the parallax effect 
   + Offsetting the 1-to-1 scrolling with translateX in the opposite direction makes the image appear to move across the screen at a different speed than the divider bar
 
-  ```js
-   {Array.apply(null, { length: Images.length + 1 }).map((_, i) =>
-            getSeparator(i)
-          )}
-          ```
+```js
+{Array.apply(null, { length: Images.length + 1 }).map((_, i) =>
+  getSeparator(i)
+)}
+```
+
 + Counter intuitive for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
 
 ## [Animate a React Native Information Callout View](https://github.com/tyreer/react-native-animations/tree/information-callout)
 
-[information-callout on expo](https://exp.host/@tyreer/information-callout)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentcallout)
++ With an Android device, you can run [information-callout on expo](https://exp.host/@tyreer/information-callout)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentcallout)
 
 ```js
 class Moment extends Component {
@@ -150,9 +167,8 @@ componentWillMount() {
 
 ## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/tyreer/react-native-animations/tree/bouncy-heart)
 
-[bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
-
-## [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
++ With an Android device, you can run [bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
 
 ```js
 triggerLike() {
@@ -201,9 +217,8 @@ return (
 
 ## [Create An Exploding Heart Button in React Native](https://github.com/tyreer/react-native-animations/tree/exploding-hearts)
 
-[exploding-hearts on expo](https://exp.host/@tyreer/exploding-hearts)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
++ With an Android device, you can run [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
 
 ```js
 this.state = {
@@ -316,9 +331,8 @@ const hideAnimations = this.state.animations
 
 ## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/tyreer/react-native-animations/tree/springy-menu)
 
-[springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/fab)
++ With an Android device, you can run [springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/fab)
 
 ```js
   this.state = {
@@ -433,9 +447,8 @@ const getTransformStyle = animation => {
 
 ## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/tyreer/react-native-animations/tree/swipe-away-modal)
 
-[swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/commentmodal)
++ With an Android device, you can run [swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/commentmodal)
 
 ```js
 <ScrollView
@@ -560,9 +573,8 @@ const opacityInterpolate = this.animated.interpolate({
 
 ## [Create a Tap to Show Love React Native Animation](https://github.com/tyreer/react-native-animations/tree/tap-to-love)
 
-[tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/periscoped)
++ With an Android device, you can run [tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/periscoped)
 
 ```js
  handleAddHeart() {
@@ -655,9 +667,8 @@ const wobbleInterpolate = animation.interpolate({
 
 ## [Toggle Hidden Details on a React Native Event Card](https://github.com/tyreer/react-native-animations/tree/toggle-hidden-details)
 
-[toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/eventcard) 
++ With an Android device, you can run [toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/eventcard) 
   
 ```js
 constructor(props) {
@@ -725,9 +736,8 @@ import Portland from "./portland.jpg";
 
 ## [Create an Expanding Notify Input with Success Message in React Native](https://github.com/tyreer/react-native-animations/tree/input-with-success)
 
-[input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
-
-[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/notifybutton)
++ With an Android device, you can run [input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
++ [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/notifybutton)
 
 ```js
 return (
