@@ -4,7 +4,11 @@ https://egghead.io/courses/real-world-react-native-animations
 Course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
 
 
-## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
+## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/tyreer/react-native-animations/tree/horizontal-parallax-scrollview)
+
+[horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
 
 ```js
    <ScrollView
@@ -64,7 +68,11 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
           ```
 + Counter intuitive for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
 
-## [Animate a React Native Information Callout View](https://github.com/browniefed/examples/tree/realworld/momentcallout)
+## [Animate a React Native Information Callout View](https://github.com/tyreer/react-native-animations/tree/information-callout)
+
+[information-callout on expo](https://exp.host/@tyreer/information-callout)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentcallout)
 
 ```js
 class Moment extends Component {
@@ -140,7 +148,11 @@ componentWillMount() {
 +  `handlePress()` triggers the animations and sets the `scrollEnabled` flag in _App.js_
     + `scrollEnabled` is translated to `focused` within _Moment.js_
 
-## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
+## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/tyreer/react-native-animations/tree/bouncy-heart)
+
+[bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
+
+## [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
 
 ```js
 triggerLike() {
@@ -187,7 +199,11 @@ return (
 + Interesting how the concerns are separated between `TouchableWithoutFeedback` and `Animated.View`
   + The `Animated.View` containing the `Heart` scales up rather than it's children
 
-## [Create An Exploding Heart Button in React Native](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
+## [Create An Exploding Heart Button in React Native](https://github.com/tyreer/react-native-animations/tree/exploding-hearts)
+
+[exploding-hearts on expo](https://exp.host/@tyreer/exploding-hearts)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
 
 ```js
 this.state = {
@@ -298,8 +314,11 @@ const hideAnimations = this.state.animations
 + Also the one place with a `start()` invocation
 
 
-## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/browniefed/examples/tree/realworld/fab)
+## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/tyreer/react-native-animations/tree/springy-menu)
+
 [springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/fab)
 
 ```js
   this.state = {
@@ -412,8 +431,11 @@ const getTransformStyle = animation => {
 };
 ``` 
 
-## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/browniefed/examples/tree/realworld/commentmodal)
+## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/tyreer/react-native-animations/tree/swipe-away-modal)
+
 [swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/commentmodal)
 
 ```js
 <ScrollView
@@ -536,8 +558,11 @@ const opacityInterpolate = this.animated.interpolate({
 ```
 + Sharing the animated value's inputRange by interpolating down to a very different value
 
-## [Create a Tap to Show Love React Native Animation](https://github.com/browniefed/examples/tree/realworld/periscoped)
+## [Create a Tap to Show Love React Native Animation](https://github.com/tyreer/react-native-animations/tree/tap-to-love)
+
 [tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/periscoped)
 
 ```js
  handleAddHeart() {
@@ -628,9 +653,11 @@ const wobbleInterpolate = animation.interpolate({
 + __extrapolate: "clamp"__ on `scaleInterpolate` 
   + nice model of only using the first portion of an `inputRange` then leaving a value static ("clamped")
 
-## [Toggle Hidden Details on a React Native Event Card](https://github.com/browniefed/examples/tree/realworld/eventcard)
+## [Toggle Hidden Details on a React Native Event Card](https://github.com/tyreer/react-native-animations/tree/toggle-hidden-details)
+
 [toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
- 
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/eventcard) 
   
 ```js
 constructor(props) {
@@ -671,6 +698,8 @@ const offsetStyle = {
 ```
 
 ```js
+import Portland from "./portland.jpg";
+
  <ImageBackground
     source={Portland}
     resizeMode="cover"
@@ -692,3 +721,105 @@ const offsetStyle = {
 
 + `offsetStyle` matches up with `styles.card`, which begins at a 191 _translateY_
 + `ImageBackground` clips via `overflow: hidden` and a fixed height
+  + Interesting use of `ImageBackground` as a container component 
+
+## [Create an Expanding Notify Input with Success Message in React Native](https://github.com/tyreer/react-native-animations/tree/input-with-success)
+
+[input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
+
+[Instructor's original code](https://github.com/browniefed/examples/tree/realworld/notifybutton)
+
+```js
+return (
+  <View style={styles.container}>
+    <TouchableWithoutFeedback onPress={this.handlePress}>
+      <Animated.View style={styles.buttonWrap}>
+        {!success && (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              styles.inputWrap,
+              inputWrapStyle
+            ]}
+          >
+            <TextInput
+              keyboardType="email-address"
+              placeholder="Email"
+              placeholderTextColor="rgba(255,123,115, 0.8)"
+              style={styles.textInput}
+            />
+            <TouchableOpacity
+              style={[styles.sendButton, sendButtonStyle]}
+              onPress={this.handleSend}
+            >
+              <Text style={styles.sendText}>Send</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {!success && (
+          <Animated.View style={notifyTextStyle}>
+            <Text style={styles.notifyText}>Notify Me</Text>
+          </Animated.View>
+        )}
+        {success && (
+          <Animated.View style={thankyouTextStyle}>
+            <Text style={styles.notifyText}>Thank You</Text>
+          </Animated.View>
+        )}
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  </View>
+);
+```
++ 3 UI displays sharing a backdrop 
+  + Scale in/out in coordination with the `success` state conditional rendering
+
+```js
+const notifyTextScaleInterpolate = this.state.animate.interpolate({
+  inputRange: [0, 0.5],
+  outputRange: [1, 0],
+  extrapolate: "clamp"
+});
+
+const inputScaleInterpolate = this.state.animate.interpolate({
+  inputRange: [0, 0.5, 0.6],
+  outputRange: [0, 0, 1],
+  extrapolate: "clamp"
+});
+
+const sendButtonInterpolate = this.state.animate.interpolate({
+  inputRange: [0, 0.6, 1],
+  outputRange: [0, 0, 1]
+});
+
+const thankyouScaleInterpolate = this.state.animate.interpolate({
+  inputRange: [0, 1],
+  outputRange: [1, 0]
+});
+```
+
++ Sequencing coordinated via the `inputRange` values and `extrapolate: "clamp"`
++ `thankyouScaleInterpolate` is inverted a bit relative to the other transitions
+
+```js
+handleSend() {
+  this.setState(
+    {
+      success: true
+    },
+    () => {
+      Animated.sequence([
+        Animated.timing(this.state.animate, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true
+        }),
+        Animated.delay(1500)
+      ]).start(() => this.setState({ success: false }));
+    }
+  );
+}
+```
++ A chain of three synchronous tasks
++ `Animated.sequence` allows the delay for the success notification to display
