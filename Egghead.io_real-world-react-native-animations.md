@@ -3,7 +3,7 @@ Egghead Course: https://egghead.io/courses/real-world-react-native-animations
 
 These are my notes on the Egghead course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
 
-__NOTE:__ All section headings link to Expo-compatible source code. That repo can also be found [here](https://github.com/tyreer/react-native-animations)
+__NOTE:__ Source code for all examples in an Expo-compatible format can be found [here](https://github.com/tyreer/react-native-animations)
 
 On __Android devices__, all examples are accessible via Expo:
 + [horizontal-parallax-scrollview](https://exp.host/@tyreer/horizontal-parallax-scrollview)
@@ -18,13 +18,15 @@ On __Android devices__, all examples are accessible via Expo:
 
 
 On __iOS devices__, you'll need to:
-+ download the source code
++ download the [source code](https://github.com/tyreer/react-native-animations)
 + install dependencies by running `yarn`
 + start a local server by running `expo start` 
++ open the app via a simulator or the [expo client app](https://expo.io/learn)
 
 
-## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/tyreer/react-native-animations/tree/horizontal-parallax-scrollview)
+## [Create a Horizontal Parallax ScrollView in React Native]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/horizontal-parallax-scrollview)
 + Check out [horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
 
@@ -87,8 +89,9 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
 
 + Counter intuitive syntax for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
 
-## [Animate a React Native Information Callout View](https://github.com/tyreer/react-native-animations/tree/information-callout)
+## [Animate a React Native Information Callout View]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/information-callout)
 + Check out [information-callout on expo](https://exp.host/@tyreer/information-callout)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentcallout)
 
@@ -166,8 +169,9 @@ componentWillMount() {
 +  `handlePress()` triggers the animations and sets the `scrollEnabled` flag in _App.js_
     + `scrollEnabled` is translated to `focused` within _Moment.js_
 
-## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/tyreer/react-native-animations/tree/bouncy-heart)
+## [Bounce a Heart Shaped Button in React Native on Press]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/bouncy-heart)
 + Check out [bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
 
@@ -216,8 +220,9 @@ return (
 + Interesting how the concerns are separated between `TouchableWithoutFeedback` and `Animated.View`
   + The `Animated.View` containing the `Heart` scales up rather than it's children
 
-## [Create An Exploding Heart Button in React Native](https://github.com/tyreer/react-native-animations/tree/exploding-hearts)
+## [Create An Exploding Heart Button in React Native]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/exploding-hearts)
 + Check out [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
 
@@ -330,8 +335,9 @@ const hideAnimations = this.state.animations
 + Also the one place with a `start()` invocation
 
 
-## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/tyreer/react-native-animations/tree/springy-menu)
+## [Build an Animated Floating Action Button in React Native with Springy Menu]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/springy-menu)
 + Check out [springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/fab)
 
@@ -446,8 +452,9 @@ const getTransformStyle = animation => {
 };
 ``` 
 
-## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/tyreer/react-native-animations/tree/swipe-away-modal)
+## [Use React Native to Animate a Swipe Away Comment Modal]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/swipe-away-modal)
 + Check out [swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/commentmodal)
 
@@ -572,8 +579,9 @@ const opacityInterpolate = this.animated.interpolate({
 ```
 + Sharing the animated value's inputRange by interpolating down to a very different value
 
-## [Create a Tap to Show Love React Native Animation](https://github.com/tyreer/react-native-animations/tree/tap-to-love)
+## [Create a Tap to Show Love React Native Animation]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/tap-to-love)
 + Check out [tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/periscoped)
 
@@ -666,8 +674,9 @@ const wobbleInterpolate = animation.interpolate({
 + __extrapolate: "clamp"__ on `scaleInterpolate` 
   + nice model of only using the first portion of an `inputRange` then leaving a value static ("clamped")
 
-## [Toggle Hidden Details on a React Native Event Card](https://github.com/tyreer/react-native-animations/tree/toggle-hidden-details)
+## [Toggle Hidden Details on a React Native Event Card]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/toggle-hidden-details)
 + Check out [toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/eventcard) 
   
@@ -735,8 +744,9 @@ import Portland from "./portland.jpg";
 + `ImageBackground` clips via `overflow: hidden` and a fixed height
   + Interesting use of `ImageBackground` as a container component 
 
-## [Create an Expanding Notify Input with Success Message in React Native](https://github.com/tyreer/react-native-animations/tree/input-with-success)
+## [Create an Expanding Notify Input with Success Message in React Native]
 
++ [Expo-compatible source code](https://github.com/tyreer/react-native-animations/tree/input-with-success)
 + Check out [input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/notifybutton)
 
