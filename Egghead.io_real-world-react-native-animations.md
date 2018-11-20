@@ -1,22 +1,23 @@
 # Notes on Real World React Native Animations
-https://egghead.io/courses/real-world-react-native-animations
+Egghead Course: https://egghead.io/courses/real-world-react-native-animations
 
-Notes on the course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
+These are my notes on the Egghead course by [Jason Brown](https://egghead.io/instructors/jason-brown-20a6bf03-254a-428c-9984-dca76cc84f32)
 
-__Example titles link to source code__
+__NOTE:__ All section headings link to Expo-compatible source code. That repo can also be found [here](https://github.com/tyreer/react-native-animations)
 
-On Android devices, all examples are accessible via Expo:
+On __Android devices__, all examples are accessible via Expo:
 + [horizontal-parallax-scrollview](https://exp.host/@tyreer/horizontal-parallax-scrollview)
 + [information-callout](https://exp.host/@tyreer/information-callout)
 + [bouncy-heart](https://exp.host/@tyreer/bouncy-heart)
++ [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
 + [springy-menu](https://exp.host/@tyreer/springy-menu)
 + [swipe-away-modal](https://exp.host/@tyreer/swipe-away-modal)
 + [tap-to-love](https://exp.host/@tyreer/tap-to-love)
 + [toggle-hidden-details](https://exp.host/@tyreer/toggle-hidden-details)
 + [input-with-success](https://exp.host/@tyreer/input-with-success)
-+ [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
 
-On iOS devices, you'll need to:
+
+On __iOS devices__, you'll need to:
 + download the source code
 + install dependencies by running `yarn`
 + start a local server by running `expo start` 
@@ -24,7 +25,7 @@ On iOS devices, you'll need to:
 
 ## [Create a Horizontal Parallax ScrollView in React Native](https://github.com/tyreer/react-native-animations/tree/horizontal-parallax-scrollview)
 
-+ With an Android device, you can run [horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
++ Check out [horizontal-parallax-scrollview on expo](https://exp.host/@tyreer/horizontal-parallax-scrollview)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentparallax/realworld)
 
 ```js
@@ -84,11 +85,11 @@ const getInterpolate = (animatedScroll, i, imageLength) => {
 )}
 ```
 
-+ Counter intuitive for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
++ Counter intuitive syntax for me, but I suppose this would be a way to generate an array simply to mirror the quantity of elements in another data set.
 
 ## [Animate a React Native Information Callout View](https://github.com/tyreer/react-native-animations/tree/information-callout)
 
-+ With an Android device, you can run [information-callout on expo](https://exp.host/@tyreer/information-callout)
++ Check out [information-callout on expo](https://exp.host/@tyreer/information-callout)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/momentcallout)
 
 ```js
@@ -167,7 +168,7 @@ componentWillMount() {
 
 ## [Bounce a Heart Shaped Button in React Native on Press](https://github.com/tyreer/react-native-animations/tree/bouncy-heart)
 
-+ With an Android device, you can run [bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
++ Check out [bouncy-heart on expo](https://exp.host/@tyreer/bouncy-heart)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/bouncyheart)
 
 ```js
@@ -217,7 +218,7 @@ return (
 
 ## [Create An Exploding Heart Button in React Native](https://github.com/tyreer/react-native-animations/tree/exploding-hearts)
 
-+ With an Android device, you can run [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
++ Check out [exploding-hearts on expo](https://expo.io/@tyreer/exploding-hearts)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/explodinghearts)
 
 ```js
@@ -331,7 +332,7 @@ const hideAnimations = this.state.animations
 
 ## [Build an Animated Floating Action Button in React Native with Springy Menu](https://github.com/tyreer/react-native-animations/tree/springy-menu)
 
-+ With an Android device, you can run [springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
++ Check out [springy-menu on Expo](https://exp.host/@tyreer/springy-menu)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/fab)
 
 ```js
@@ -447,7 +448,7 @@ const getTransformStyle = animation => {
 
 ## [Use React Native to Animate a Swipe Away Comment Modal](https://github.com/tyreer/react-native-animations/tree/swipe-away-modal)
 
-+ With an Android device, you can run [swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
++ Check out [swipe-away-modal on Expo](https://exp.host/@tyreer/swipe-away-modal)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/commentmodal)
 
 ```js
@@ -573,7 +574,7 @@ const opacityInterpolate = this.animated.interpolate({
 
 ## [Create a Tap to Show Love React Native Animation](https://github.com/tyreer/react-native-animations/tree/tap-to-love)
 
-+ With an Android device, you can run [tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
++ Check out [tap-to-love on Expo](https://exp.host/@tyreer/tap-to-love)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/periscoped)
 
 ```js
@@ -667,7 +668,7 @@ const wobbleInterpolate = animation.interpolate({
 
 ## [Toggle Hidden Details on a React Native Event Card](https://github.com/tyreer/react-native-animations/tree/toggle-hidden-details)
 
-+ With an Android device, you can run [toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
++ Check out [toggle-hidden-details on Expo](https://exp.host/@tyreer/toggle-hidden-details)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/eventcard) 
   
 ```js
@@ -736,7 +737,7 @@ import Portland from "./portland.jpg";
 
 ## [Create an Expanding Notify Input with Success Message in React Native](https://github.com/tyreer/react-native-animations/tree/input-with-success)
 
-+ With an Android device, you can run [input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
++ Check out [input-with-success on Expo](https://exp.host/@tyreer/input-with-success)
 + [Instructor's original code](https://github.com/browniefed/examples/tree/realworld/notifybutton)
 
 ```js
