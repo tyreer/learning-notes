@@ -1,3 +1,13 @@
+# Notes on Fullstack Advanced React and GraphQL
+
+Notes from the Wes Bos course at [advancedreact.com](https://advancedreact.com/)
+
+## Resources:
+
++ [Stepped solutions](https://github.com/tyreer/advanced-react-wes-bos-course/tree/master/stepped-solutions)
+
+## Lesson Notes
+
 ### 03 - An Intro to Next.js, Tooling and Routing
 
 + __Next.js__ takes care of 
@@ -460,9 +470,9 @@ __Recap:__
 + In our public __schema.graphql__ we expose the functions we want to be accessible to users of our API
 + All the mutations and queries in the _schema_ need to be matched via resolvers 
 + The _resolvers_ complete any custom logic we want to implement
-  + Things like charing a CC or sending an email would live here
+  + Things like charging a CC or sending an email would live here
 
-###15 - Setting Up Apollo Client with React
+### 15 - Setting Up Apollo Client with React
 
 __frontend/lib/withData.js__
 
@@ -496,3 +506,309 @@ export default withApollo(createClient);
   + apollo-link-state: An Apollo Link for local state management
 
 + __fetchOptions__ including credentials allows any cookies in the browser to be included
+
+__frontend/pages/_app.js__
+```js
+import { ApolloProvider } from "react-apollo";
+...
+class MyApp extends App {
+  ...
+
+  render() {
+    const { Component, apollo, pageProps } = this.props;
+
+    return (
+      <Container>
+        <ApolloProvider client={apollo}>
+          <Page>
+            <Component {...pageProps} />
+          </Page>
+        </ApolloProvider>
+      </Container>
+    );
+  }
+}
+
+export default withData(MyApp);
+```
+
++ __ApolloProvider__ generates the Apollo client
++ __withData()__ injects _apollo_ into props 
+
+__frontend/pages/_app.js__
+
+```js
+class MyApp extends App {
+  static async getInitialProps({ Component, ctx }) {
+    let pageProps = {};
+    if (Component.getInitialProps) {
+      pageProps = await Component.getInitialProps(ctx);
+    }
+
+    // this exposes the query to the user
+    pageProps.query = ctx.query;
+    return { pageProps };
+  }
+
+   render() {
+    const { Component, apollo, pageProps } = this.props;
+```
+
++ __getInitialProps()__ is a Next.js lifecycle method that runs before the first render
+  + It will expose things like the page number or product id that we get in the URL
+  + By returning __pageProps__, we inject it into props
+
+__Next.js docs on getInitialProps()__
+
++ __initial data population__
+
+```js
+import React from 'react'
+
+export default class extends React.Component {
+  static async getInitialProps({ req }) {
+    const userAgent = req ? req.headers['user-agent'] : navigator.userAgent
+    return { userAgent }
+  }
+
+  render() {
+    return (
+      <div>
+        Hello World {this.props.userAgent}
+      </div>
+    )
+  }
+}
+```
+
+> Notice that to load data when the page loads, we use getInitialProps which is an async static method. It can asynchronously fetch anything that resolves to a JavaScript plain Object, which populates props.
+
+> For the initial page load, getInitialProps will execute on the server only. getInitialProps will only be executed on the client when navigating to a different route via the Link component or using the routing APIs.
+
++ https://github.com/zeit/next.js/#fetching-data-and-component-lifecycle
+
+
+### 16 - React Meets GraphQL
+
+__/frontend/components/Item.js__
+
+```js
+import Link from "next/link";
+
+...
+
+<Link
+  href={{
+    pathname: "/item",
+    query: { id: item.id }
+  }}
+>
+  <a>{item.title}</a>
+</Link>
+```
+
++ __next.js Link__ component accepting pathname + query in an object literal in _href_
+
+__frontend/components/styles/ItemStyles.js__
+
+```js
+const ItemStyles = styled.div`
+...
+.buttonList {
+  display: grid;
+  width: 100%;
+  border-top: 1px solid ${props => props.theme.lightgrey};
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-gap: 1px;
+  background: ${props => props.theme.lightgrey};
+  & > * {
+    background: white;
+    border: 0;
+    font-size: 1rem;
+    padding: 1rem;
+  }
+}
+`
+```
+
+```js
+<ItemStyles>
+  
+  ...
+
+  <div className="buttonList">
+    <Link
+      href={{
+        pathname: "update",
+        query: { id: item.id }
+      }}
+    >
+      <a>Edit ✏️</a>
+    </Link>
+    <button>Add To Cart</button>
+    <button>Delete </button>
+  </div>
+</ItemStyles>
+  ```
++ __ItemStyles__ is both a container div with style rules and a scope for classes
++ For instance, the __buttonList__ class is accessible within an ItemStyles component
+  + Nice trick to use __grid-gap__ and a background color to handle the borders between the three boxes in the div
+
+__frontend/components/Items.js__
+
+```js
+import gql from "graphql-tag";
+
+const ALL_ITEMS_QUERY = gql`
+  query ALL_ITEMS_QUERY {
+    items {
+      id
+      title
+      price
+      description
+      image
+      largeImage
+    }
+  }
+`;
+
+...
+
+class Items extends Component {
+  render() {
+    return (
+      <Center>
+        <Query query={ALL_ITEMS_QUERY}>
+          {({ data, error, loading }) => {
+            if (loading) return <p>Loading...</p>;
+            if (error) return <p>Error: {error.message}</p>;
+            return (
+              <ItemsList>
+                {data.items.map(item => (
+                  <Item item={item} key={item.id} />
+                ))}
+              </ItemsList>
+            );
+          }}
+        </Query>
+      </Center>
+    );
+  }
+}
+```
+
++ Nice compact model of a __Query__
+
+### 17 - Creating Items with Mutations
+
+__frontend/components/CreateItem.js__
+
+```js
+ handleChange = e => {
+    const { name, type, value } = e.target;
+    const val = type === 'number' ? parseFloat(value) : value;
+    this.setState({ [name]: val });
+  };
+```
+
++ Nice text input handler
+  + Handles number inputs
+  + Creates new state field based on input's name attribute, so can be reused a lot
+
+
+__frontend/components/CreateItem.js__
+
+```js
+import { Mutation } from "react-apollo";
+
+...
+
+const CREATE_ITEM_MUTATION = gql`
+  mutation CREATE_ITEM_MUTATION(
+    $title: String!
+    $description: String!
+    $price: Int!
+    $image: String
+    $largeImage: String
+  ) {
+    createItem(
+      title: $title
+      description: $description
+      price: $price
+      image: $image
+      largeImage: $largeImage
+    ) {
+      id
+    }
+  }
+`;
+```
+
++ Declaring the mutation we want to use on the frontend
++ Useful to revisit [Our First Query and Mutation](#13---our-first-query-and-mutation)
+  + That's where we set up __createItem__ as a mutation on the backend
+
+```js
+import Router from "next/router";
+
+...
+
+render() {
+  return (
+    <Mutation mutation={CREATE_ITEM_MUTATION} variables={this.state}>
+      {(createItem, { loading, error }) => (
+        <Form
+          onSubmit={async e => {
+            // Stop the form from submitting
+            e.preventDefault();
+            // call the mutation
+            const res = await createItem();
+            // change them to the single item page
+            console.log(res);
+            Router.push({
+              pathname: "/item",
+              query: { id: res.data.createItem.id }
+            });
+          }}
+        >
+
+        ...
+  ```
+
++ __onSubmit__ invoking `createItem()`
+
+```js
+import Error from "./ErrorMessage";
+
+...
+
+ <Error error={error} />
+            <fieldset disabled={loading} aria-busy={loading}>
+```
+
++ Interesting use of custom `<Error />`
+  +  Want the form to remain mounted so that any errors can be corrected
++ __fieldset__ `disabled` state and styles via `aria-busy` seems super useful
+
+__frontend/components/styles/Form.js__
+
+```css
+  fieldset {
+    border: 0;
+    padding: 0;
+
+    &[disabled] {
+      opacity: 0.5;
+    }
+    &::before {
+      height: 10px;
+      content: '';
+      display: block;
+      background-image: linear-gradient(to right, #ff3019 0%, #e2b04a 50%, #ff3019 100%);
+    }
+    &[aria-busy='true']::before {
+      background-size: 50% auto;
+      animation: ${loading} 0.5s linear infinite;
+    }
+  }
+  ```
