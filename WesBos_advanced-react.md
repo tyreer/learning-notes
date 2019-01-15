@@ -776,14 +776,15 @@ render() {
   ```
 
 + __onSubmit__ invoking `createItem()`
+  + Variables aren't passed in how I'd expect, but the parameter to _Mutation_ indicates to use _state_
 
 ```js
 import Error from "./ErrorMessage";
 
 ...
 
- <Error error={error} />
-            <fieldset disabled={loading} aria-busy={loading}>
+<Error error={error} />
+  <fieldset disabled={loading} aria-busy={loading}>
 ```
 
 + Interesting use of custom `<Error />`
@@ -792,23 +793,347 @@ import Error from "./ErrorMessage";
 
 __frontend/components/styles/Form.js__
 
-```css
-  fieldset {
-    border: 0;
-    padding: 0;
+```js
+import styled, { keyframes } from 'styled-components';
 
-    &[disabled] {
-      opacity: 0.5;
+const loading = keyframes`
+  from {
+    background-position: 0 0;
+    /* rotate: 0; */
+  }
+
+  to {
+    background-position: 100% 100%;
+    /* rotate: 360deg; */
+  }
+`;
+
+fieldset {
+  border: 0;
+  padding: 0;
+
+  &[disabled] {
+    opacity: 0.5;
+  }
+  &::before {
+    height: 10px;
+    content: '';
+    display: block;
+    background-image: linear-gradient(to right, #ff3019 0%, #e2b04a 50%, #ff3019 100%);
+  }
+  &[aria-busy='true']::before {
+    background-size: 50% auto;
+    animation: ${loading} 0.5s linear infinite;
+  }
+}
+```
+
+
+### 18 - Uploading Images
+
+__Cloudinary__
+  + https://cloudinary.com/
+  
+
+__frontend/components/CreateItem.js__
+
+```js
+uploadFile = async e => {
+  console.log("uploading file...");
+  const files = e.target.files;
+  const data = new FormData();
+  data.append("file", files[0]);
+  data.append("upload_preset", "sickfits");
+
+  const res = await fetch(
+    "https://api.cloudinary.com/v1_1/drh2gik6v/image/upload",
+    {
+      method: "POST",
+      body: data
     }
-    &::before {
-      height: 10px;
-      content: '';
-      display: block;
-      background-image: linear-gradient(to right, #ff3019 0%, #e2b04a 50%, #ff3019 100%);
-    }
-    &[aria-busy='true']::before {
-      background-size: 50% auto;
-      animation: ${loading} 0.5s linear infinite;
+  );
+  const file = await res.json();
+  console.log(file);
+  this.setState({
+    image: file.secure_url,
+    largeImage: file.eager[0].secure_url
+  });
+};
+```
+
++ __FormData__ object get file from input box appended to it
+
+```js
+<label htmlFor="file">
+  Image
+  <input
+    type="file"
+    id="file"
+    name="file"
+    placeholder="Upload an image"
+    required
+    onChange={this.uploadFile}
+  />
+  {this.state.image && (
+    <img
+      width="200"
+      src={this.state.image}
+      alt="Upload Preview"
+    />
+  )}
+</label>
+```
+
+### 19 - Updating Items with Queries and Mutations
+
+__Step 1: Add to the schema__
+
+__/backend/src/schema.graphql__
+
+```graphql
+type Mutation {
+  ...
+  updateItem(id: ID!, title: String, description: String, price: Int): Item!
+}
+```
+
+```graphql
+type Query {
+  ...
+  item(where: ItemWhereUniqueInput!): Item
+}
+```
+
++ `where: ItemWhereUniqueInput!): Item` is copied from the generated __prisma.graphql__ file
+  + This must be the CRUD abilities mentioned back in [Items Creation and Prisma Yoga Flow](#14---items-creation-and-prisma-yoga-flow)
+  + Bos says he likes to keep close to those generated types whenever possible
+
+
+__Step 2: Write the resolvers__
+
+__/backend/src/resolvers/Query.js__
+
+```js
+const { forwardTo } = require("prisma-binding");
+
+const Query = {
+  ...
+  item: forwardTo("db")
+```
+
++ No custom logic so can just forward
+
+
+__/backend/src/resolvers/Mutation.js__
+
+```graphql
+updateItem(parent, args, ctx, info) {
+  // first take a copy of the updates
+  const updates = { ...args };
+  // remove the ID from the updates
+  delete updates.id;
+  // run the update method
+  return ctx.db.mutation.updateItem(
+    {
+      data: updates,
+      where: {
+        id: args.id
+      }
+    },
+    info
+  );
+}
+```
+
++ `ctx.db.mutation.updateItem` 
+  + `ctx` is context in the request 
+  + `db` is how we expose the Prisma database
+  + then we have access to our entire generated API from __prisma.graphql__
+
++ Second argument `info` is what data we want the mutation to return
+
+
+__frontend/pages/_app.js__
+
+```js
+static async getInitialProps({ Component, ctx }) {
+  
+  ...
+  
+  // this exposes the query to the user
+    pageProps.query = ctx.query;
+    return { pageProps }
+}
+```
+
++ Because we pass the `query` in as above...
+
+__frontend/pages/update.js__
+
+```js
+const Update = ({ query }) => (
+  <div>
+    <UpdateItem id={query.id} />
+  </div>
+);
+```
+
++ ... our page components have access to our query
+  + (although I don't know exactly what query, maybe query params from the URL?)
+
+
+__/frontend/components/UpdateItem.js__
+
+```js
+render() {
+  return (
+    <Query
+      query={SINGLE_ITEM_QUERY}
+      variables={{
+        id: this.props.id
+      }}
+    >
+      {({ data, loading }) => {
+        if (loading) return <p>Loading...</p>;
+        if (!data.item) return <p>No Item Found for ID {this.props.id}</p>;
+        return (
+          <Mutation mutation={UPDATE_ITEM_MUTATION} variables={this.state}>
+            {(updateItem, { loading, error }) => (
+              <Form onSubmit={e => this.updateItem(e, updateItem)}>
+                <Error error={error} />
+                <fieldset disabled={loading} aria-busy={loading}>
+                  <label htmlFor="title">
+                    Title
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      placeholder="Title"
+                      required
+                      defaultValue={data.item.title}
+                      onChange={this.handleChange}
+                    />
+                  </label>
+```
+
++ Query `SINGLE_ITEM_QUERY` populates the form fields' `defaultValue`
+  + This combo of `defaultValue` and the `handleChange` function only populates state with whatever has changed
+  + That's why we pass `variables={this.state}`into the `UPDATE_ITEM_MUTATION`
+
++ The form's __onSubmit__ function is a nice model of passing the __updateItem__ mutation method out onto a class method
+
+
+```js
+class UpdateItem extends Component {
+  state = {};
+
+  ...
+
+  updateItem = async (e, updateItemMutation) => {
+    e.preventDefault();
+    const res = await updateItemMutation({
+      variables: {
+        id: this.props.id,
+        ...this.state
+      }
+    });
+  };
+```
+
+### 20 - Deleting Items
+
+__Step 1: Add to the schema__
+
+__/backend/src/schema.graphql__
+
+```graphql
+type Mutation {
+  ...
+  deleteItem(id: ID!): Item!
+}
+```
+
+__Step 2: Write the resolver__
+
+__/backend/src/resolvers/Mutation.js__
+
+```js
+async deleteItem(parent, args, ctx, info) {
+  const where = { id: args.id };
+  // 1. find the item
+  const item = await ctx.db.query.item({ where }, `{ id title}`);
+  // 2. Check if they own that item, or have the permissions
+  // TODO
+  // 3. Delete it!
+  return ctx.db.mutation.deleteItem({ where }, info);
+}
+```
+
++ Interesting that the mutation resolver queries for the item `id` passed in
+  + Second argument `{ id title}` is just graphql being sent in to specify what to return
+
+__frontend/components/DeleteItem.js__
+
+```js
+const DELETE_ITEM_MUTATION = gql`
+  mutation DELETE_ITEM_MUTATION($id: ID!) {
+    deleteItem(id: $id) {
+      id
     }
   }
-  ```
+`;
+```
+
+```js
+class DeleteItem extends Component {
+
+  ...
+
+  render() {
+    return (
+      <Mutation
+        mutation={DELETE_ITEM_MUTATION}
+        variables={{ id: this.props.id }}
+        update={this.update}
+      >
+        {(deleteItem, { error }) => (
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this item?")) {
+                deleteItem();
+              }
+            }}
+          >
+            {this.props.children}
+          </button>
+        )}
+      </Mutation>
+    );
+  }
+}
+```
+
++ `variables={{ id: this.props.id }}` is being passed in via `Item` component
++ Never seen a __confirm prompt__ like this: `if (confirm("?")) { deleteItem();}`
++ __update__ method on mutation allows us to update the cache to reflect mutation changes
+
+```js
+class DeleteItem extends Component {
+  update = (cache, payload) => {
+    // manually update the cache on the client, so it matches the server
+    // 1. Read the cache for the items we want
+    const data = cache.readQuery({ query: ALL_ITEMS_QUERY });
+    // 2. Filter the deleted item out of the page
+    data.items = data.items.filter(
+      item => item.id !== payload.data.deleteItem.id
+    );
+    // 3. Put the items back!
+    cache.writeQuery({ query: ALL_ITEMS_QUERY, data });
+  };
+
+  ...
+
+```
+
++ A mutation update recieves current `(cache, payload)`
+  + Then manually reading the cache, manipulating the results, and writing the desired change back to the database
