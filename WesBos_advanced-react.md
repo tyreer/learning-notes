@@ -358,7 +358,7 @@ __backend/package.json__
 + __nodemon__ watches for changes and restarts server
   + only specifying `-e` flag because of graphql changes
 
-__src/schema.graphql__
+__backend/schema.graphql__
 
 ```graphql
 type Mutation {
@@ -1137,3 +1137,1781 @@ class DeleteItem extends Component {
 
 + A mutation update recieves current `(cache, payload)`
   + Then manually reading the cache, manipulating the results, and writing the desired change back to the database
+
+
+### 21 - Displaying Single Items
+
+__frontend/components/Page.js__
+
+```js
+const theme = {
+  red: "#FF0000",
+  
+  ...
+
+  bs: "0 12px 24px 0 rgba(0, 0, 0, 0.09)"
+};
+```
+
++ Theme values declared
+
+__frontend/components/SingleItem.js__
+
+```js
+const SingleItemStyles = styled.div`
+  max-width: 1200px;
+  margin: 2rem auto;
+  box-shadow: ${props => props.theme.bs};
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  min-height: 800px;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .details {
+    margin: 3rem;
+    font-size: 2rem;
+  }
+`;
+```
+
++ `box-shadow` accessing theme via _prop_ injected into component 
++ __object-fit__ handy for retaining proportions
+
+```js
+import Head from "next/head";
+
+class SingleItem extends Component {
+  
+...
+
+<Head>
+  <title>Sick Fits | {item.title}</title>
+</Head>
+```
+
++ __Head__ component provides conenient way to update meta data in the head tag via _Next_
+
+```js
+if (!data.item) return <p>No Item Found for {this.props.id}</p>;
+```
+
++ Could implement logic on backend to send an error
+  + This is common way of dealing with that on the frontend
+
+### 21 - Pagination
+
+```graphql
+query stupid {
+  itemsConnection(where: {
+    title_contains: "graph"
+  }){
+    aggregate{
+      count
+    }
+  }
+}
+```
+
++ Sample GraphQL playground query to test new query
+  + Query __itemsConnection__ came from generated _prisma.graphql_ file 
+  + Added to _schema.graphql_ and query resolver
+
+__/frontend/pages/index.js__
+
+```js
+import Items from "../components/Items";
+
+const Home = props => (
+  <div>
+    <Items page={parseFloat(props.query.page) || 1} />
+  </div>
+);
+
+export default Home;
+```
+
++ __Query param__ is accessible via props on the root index file 
+
+
+__frontend/components/Pagination.js__
+
+```js
+const PAGINATION_QUERY = gql`
+  query PAGINATION_QUERY {
+    itemsConnection {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
+
+...
+
+const count = data.itemsConnection.aggregate.count;
+```
+
++ Query provides count of all items via __aggregate__
+
+```js
+return (
+    <PaginationStyles>
+      <Head>
+        <title>
+          Sick Fits! — Page {page} of {pages}
+        </title>
+      </Head>
+      <Link
+        prefetch
+        href={{
+          pathname: "items",
+          query: { page: page - 1 }
+        }}
+      >
+        <a className="prev" aria-disabled={page <= 1}>
+          ← Prev
+        </a>
+      </Link>
+```
+
++ __prefetch__ on the __Link__ will pull in the previous and next page so the data is available instantly in production
++ __query__ attribute being passed into the href on Next __Link__
++ __aria-disabled__ prop on the anchor tag
+
+### 21 - Pagination and Cache Invalidation
+
+__backend/schema.graphql__
+
+```graphql
+type Query {
+  items(where: ItemWhereInput, orderBy: ItemOrderByInput, skip: Int, first: Int): [Item]!
+  ...
+}
+```
+
++ Added __orderBy__, __skip__. and __first__ to schema
+
+__frontend/components/Items.js__
+
+```js
+const ALL_ITEMS_QUERY = gql`
+  query ALL_ITEMS_QUERY($skip: Int = 0, $first: Int = ${perPage}) {
+    items(first: $first, skip: $skip, orderBy: createdAt_DESC) {
+      ...
+    }
+  }
+`;
+```
+
++ Typing plus default value:  `$first: Int = ${perPage})`
+
+__UPDATE NOTE:__
+ 
+ + When an item is deleted or added, it creates a cache that's out of date with the desired set of items on a page
+   + BUT, there's currently no way to add __partial cache invalidation in Apollo__
+   + You can __refetch__, but then what values do you pass into `first` and `skip`? 
+   + Bos says he'll update the video once this feature is implemented:
+     + https://github.com/apollographql/apollo-feature-requests/issues/4
+
+
+### 22 User Sign Up and Permission Flow
+
+__backend/datamodel.graphql__
+
+```graphql
+enum Permission {
+  ADMIN
+  USER
+  ITEMCREATE
+  ITEMUPDATE
+  ITEMDELETE
+  PERMISSIONUPDATE
+}
+
+type User {
+  id: ID! @unique
+  name: String!
+  email: String! @unique
+  password: String!
+  resetToken: String
+  resetTokenExpiry: Float
+  permissions: [Permission]
+}
+```
+
++ Added `@unique` __decorator__ to email to prevent multiple accounts with a single email
++ `resetToken`, `resetTokenExpiry`, `permissions` are all new fields on the user type
++ Because we've updated the data model, we need to __deploy__ the changes to Prisma
+
+```graphql
+# import * from './generated/prisma.graphql'
+
+type Mutation {
+  ...
+  signup(email: String!, password: String!, name: String!): User! 
+}}
+```
+
++ New mutation types the return as `User`, which we're importing from _generated/prisma.graphql_ 
+ + And that was generated in response to deploying after changing the datamodel
+
+
+__backend/src/index.js__
+
+```js
+const cookieParser = require('cookie-parser');
+
+...
+
+server.express.use(cookieParser());
+```
+
++ This index file runs in an Express context
++ Using cookies allows us to server render the pages for the authenticated user 
+  + We'll send a JWT: JSON web token
++ Another way this could be done is through local storage rather than cookies
+  + But that prevents limitations regarding server-side rendering
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+
+...
+
+ async signup(parent, args, ctx, info) {
+    // lowercase their email
+    args.email = args.email.toLowerCase();
+    // hash their password
+    const password = await bcrypt.hash(args.password, 10);
+    // create the user in the database
+    const user = await ctx.db.mutation.createUser(
+      {
+        data: {
+          ...args,
+          password,
+          permissions: { set: ["USER"] }
+        }
+      },
+      info
+    );
+    // create the JWT token for them
+    const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    // We set the jwt as a cookie on the response
+    ctx.response.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year cookie
+    });
+    // Finalllllly we return the user to the browser
+    return user;
+  }
+  ```
+  + Add __resolver__ for new mutation 
+  + `permissions: { set: ["USER"] }` syntax because need to _set_ the value of the enum
+
+### 25 User Sign Up in React
+
+__frontend/pages/signup.js__
+
+```js
+  const Columns = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+`;
+
+const SignupPage = props => (
+  <Columns>
+    <Signup />
+    <Signup />
+    <Signup />
+  </Columns>
+);
+```
+
++ `grid-template-columns` value allows three columns because the layout has a max-width of 1000px
+  + __repeat(auto-fit, ...)__
+
+__frontend/components/Signup.js__
+
+```js
+class Signup extends Component {
+  state = {
+    name: "",
+    password: "",
+    email: ""
+  };
+  saveToState = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+  render() {
+    return (
+      <Mutation mutation={SIGNUP_MUTATION} variables={this.state}>
+        {(signup, { error, loading }) => (
+          <Form
+            method="post"
+            onSubmit={async e => {
+              e.preventDefault();
+              await signup();
+              this.setState({ name: "", email: "", password: "" });
+            }}
+          >
+            <fieldset disabled={loading} aria-busy={loading}>
+              <h2>Sign Up for An Account</h2>
+              <Error error={error} />
+              <label htmlFor="email">
+                Email
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="email"
+                  value={this.state.email}
+                  onChange={this.saveToState}
+                />
+              </label>
+```
++ __saveToState__ using `[e.target.name]` to pull off the _input_ `name` attribute and match state field
+
++ Good practice to include __method="post"__ 
+  + If JS fails, this will default to _get_ and the password will be in the url (history, server log)
+
+```js
+<fieldset disabled={loading} aria-busy={loading}>
+```
+ + Nice use of __loading__ to disable form/fieldset
+
+### 26 Currently Logged In User with Middleware and Render Props
+
+Middleware allows us to step in between a request or before a request and do a little bit of extra work
+
+__backend/src/index.js__
+```js
+// decode the JWT so we can get the user Id on each request
+server.express.use((req, res, next) => {
+  const { token } = req.cookies;
+  if (token) {
+    const { userId } = jwt.verify(token, process.env.APP_SECRET);
+    // put userId onto the request for future requests to access
+    req.userId = userId;
+  }
+  next();
+});
+```
+
+```js
+const { token } = req.cookies;
+```
++ Can send this JWT/token along with the request
+  + This identifies the user, and could be done client-side via local storage
+  + But the benefit of using the cookie is it allows server-side rendering to get user-specific content
+
+_Where does the cookie on the response come from?_
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+async signup(parent, args, ctx, info) {
+  
+  ...
+
+    // create the JWT token for them
+    const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+    // We set the jwt as a cookie on the response
+    ctx.response.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year cookie
+    });
+```
+
++ We attached the cookie on the response in the `signup` mutation
+  + _But does this mean it would be on our future requests???_ 
+
+__backend/src/schema.graphql__
+
+```graphql
+type Query {
+  ...
+  me: User
+}
+```
++ Add query to schema
+
+__backend/src/resolvers/Query.js__
+
+```js
+me(parent, args, ctx, info) {
+    // check if there is a current user id
+    if(!ctx.request.userId) {
+      return null;
+    }
+    return ctx.db.query.user({
+      where: { id: ctx.request.userId }
+    }, info) 
+  }
+```
++ Add resolver for query
++ We want to return `null` in case the user is not logged in, rather than any error
+ + Because users might not be logged in
+
+```graphql
+user(where: UserWhereUniqueInput!): User
+```
++ `user` query is defined in the _prisma.graphql_ file, which is why we're using the `where` argument
+ + `ctx.request.userId` is accessible since we put the userId on the requests in our middleware
++ `info` is the actual query from the client side
+  + Things like cart items, permission, name, etc.
+
+__/frontend/components/User.js__
+
+```js
+const User = props => (
+  <Query {...props} query={CURRENT_USER_QUERY}>
+    {payload => props.children(payload)}
+  </Query>
+);
+```
+
++ `User` component has a __render prop__ or __function as children__ pattern
+
+__/frontend/components/Nav.js__
+```js
+const Nav = () => (
+  <NavStyles>
+    <User>
+      {({ data: { me } }) => {
+        console.log(me);
+        if (me) return <p>{me.name}</p>;
+        return null;
+      }}
+    </User>
+```
++ `{ data: { me } }` double layer destructuring of `props.payload.data.me`
+
+### 27 Sign in Form and Custom Error Handling 
+
+__backend/src/schema.graphql__
+
+```js
+type Mutation {
+  ...
+  signin(email: String!, password: String!): User!
+}
+```
++ New sign in mutation added to _schema_
+
+__backend/src/resolvers/Mutation.js__
+```js
+async signin(parent, { email, password }, ctx, info) {
+  // 1. Check if there is a user with that password
+  const user = await ctx.db.query.user({ where: { email } });
+
+  if (!user) {
+    throw new Error(`No user found for email ${email}`);
+  }
+
+  // 2. Check if their password is correct
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) {
+    throw new Error("Invalid password!");
+  }
+
+  // 3. generate the JWT Token
+  const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+
+  // 4. Set the cookie with the token
+  ctx.response.cookie("token", token, {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 365
+  });
+
+  // 5. Return the user
+  return user;
+}
+```
++ New sign in _resolver_
++ Really not so complicated
+
+```js
+async signin(parent, { email, password }, ctx, info) {
+```
++ Destructuring `email, password` from `args` right in __the signature of the function__
+
+__frontend/components/Signin.js__
+```js
+<Mutation
+    mutation={SIGNUP_MUTATION}
+    variables={this.state}
+    refetchQueries={[{ query: CURRENT_USER_QUERY }]}
+  >
+```
++ Because this is a React app, we're not reloading the page on changes
+  + ...so need to tell Apollo to __refetch__ the `CURRENT_USER_QUERY` query to update the Apollo cache and any related UI (like the nav)
+
+
+__frontend/components/Nav.js__
+
+```js
+const Nav = () => (
+  <User>
+    {({ data: { me } }) => (
+      <NavStyles>
+        <Link href="/items">
+          <a>Shop</a>
+        </Link>
+        {me && (
+          <>
+            <Link href="/sell">
+              <a>Sell</a>
+            </Link>
+            <Link href="/orders">
+              <a>Orders</a>
+            </Link>
+            <Link href="/me">
+              <a>Account</a>
+            </Link>
+          </>
+        )}
+        {!me && (
+          <Link href="/signup">
+            <a>Sign In</a>
+          </Link>
+        )}
+      </NavStyles>
+    )}
+  </User>
+);
+```
++ `Nav` using render prop in `User` to conditionally render nav elements
+
+### 28 Sign Out Button
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+async signout(parent, args, ctx, info) {
+  ctx.response.clearCookie("token");
+  return { message: "Successfully logged out" };
+}
+```
+
++ Message isn't being used, but we specified `SuccessMessage` as a custom type in our schema
++ Can use `clearCookie` because we've got `cookieParser` on our Express server:
+
+__backend/src/index.js__
+```js
+server.express.use(cookieParser());
+```
+
+__frontend/components/Signout.js__
+
+```js
+const SIGN_OUT_MUTATION = gql`
+  mutation SIGN_OUT_MUTATION {
+    signout {
+      message
+    }
+  }
+`;
+
+const Signout = props => (
+  <Mutation
+    mutation={SIGN_OUT_MUTATION}
+    refetchQueries={[{ query: CURRENT_USER_QUERY }]}
+  >
+    {signout => <button onClick={signout}>Sign Out</button>}
+  </Mutation>
+);
+```
++ I thought this would need to use routing, as all the other nav elements are links
+ + But since __links and buttons share styles in the nav__, it's easy to drop in the semantic button
+ + Also, my initial thinking was that a route would trigger logic (like a mutation on CdM I suppose), but there's no real need for a new route as the app state and UI updates can all be affected without changing routes
+
++ __App design__ showing itself in how we're able to only run `refetchQueries` on a single meaningful query
+  + In contrast to a scenario where you need to refetch loads of queries to update many UI components that reflect changes in app state (ie: logged in / logged out)
+
+### 29 Backend Password Reset Flow
+
+__backend/src/generated/prisma.graphql__
+
+```graphql
+type User implements Node {
+  id: ID!
+  name: String!
+  email: String!
+  password: String!
+  resetToken: String
+  resetTokenExpiry: Float
+  permissions: [Permission!]!
+}
+```
+
++ We take this user type from the prisma schema...
+
+__backend/src/schema.graphql__
+
+```graphql
+type User implements Node {
+  id: ID!
+  name: String!
+  email: String!
+  permissions: [Permission!]!
+}
+```
+
++ ...and adapt it for our frontend facing Yoga server schema
+ +  Removing the `resetToken` and other things that should be backend only
++ __Really important__ to adapt this _type_ because it would be a security risk otherwise
+
+```js
+const { randomBytes } = require("crypto");
+```
++ Built into Node, allows solid cryptographic hashing of reset token
+
+```js
+const { promisify } = require("util");
+```
++ Also built into Node, converts callback-based functions into _promise_ syntax
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+async requestReset(parent, { email }, ctx, info) {
+  // 1. Check if they're a real user
+  const user = await ctx.db.query.user({ where: { email } });
+
+  if (!user) {
+    throw new Error(`No user found for email ${email}`);
+  }
+
+  // 2. Set a reset token and expiry on that user
+  const randomBytesPromise = promisify(randomBytes);
+  const resetToken = (await randomBytesPromise(20)).toString("hex");
+  const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
+  const res = await ctx.db.mutation.updateUser({
+    where: { email },
+    data: { resetToken, resetTokenExpiry }
+  });
+  return { message: "Thanks!" };
+}
+```
++ `randomBytesPromise` will return a _buffer_, which we're converting to string (via hex?)
++ All we're really doing with `requestReset` at this point is adding the `resetToken` and `resetTokenExpiry` fields
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+async resetPassword( parent,{ resetToken, password, confirmPassword }, ctx, info) {
+    ...
+    // 2. check if it's a legit reset token
+    // 3. check if it's expired
+    const [user] = ctx.db.users({
+      where: { resetToken, resetTokenExpiry_gte: Date.now() - 3600000 }
+    });
+```
+
++ In the mutation, we need to get the user, but the singular `user` query has a limited type accepted by its `where:` parameter
+  + We don't have either the `id` or `email`
+  + But we can use the `users` query,which has a `where` parameter that accepts almost everything, then use just the first/only response
+  + Here `resetTokenExpiry_gte` = _greater than or equal to_
+
+__backend/src/generated/prisma.graphql__
+
+```graphql
+type Query {
+  users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
+  ...
+  user(where: UserWhereUniqueInput!): User
+  ...
+}
+
+input UserWhereInput {
+  ... literally 300 lines, and where resetTokenExpiry_gte comes from...
+}
+
+input UserWhereUniqueInput {
+  id: ID
+  email: String
+}
+```
+### 30 Frontend Password Reset Flow
+
+__frontend/components/RequestReset.js__
+
+```js
+return (
+  <Mutation mutation={REQUEST_RESET_MUTATION} variables={this.state}>
+    {(reset, { error, loading, called }) => (
+      <Form
+        method="post"
+        onSubmit={async e => {
+          e.preventDefault();
+          await reset();
+          this.setState({ email: "" });
+        }}
+      >
+        <fieldset disabled={loading} aria-busy={loading}>
+          <h2>Request a password reset</h2>
+          <Error error={error} />
+          {!error && !loading && called && (
+            <p>Success! Check your email for a reset link!</p>
+          )}
+```
+
++ `called` attribute can be used within mutation 
+  + Here it's affirming that the user's request was received
++ This form just takes an email and then updates the user in the database to have a reset token and expiry time on their account
+
+
+__frontend/pages/reset.js__
+```js
+import Reset from "../components/Reset";
+
+const PasswordReset = props => (
+  <div>
+    <p>Reset Your Password {props.query.resetToken}</p>
+    <Reset resetToken={props.query.resetToken} />
+  </div>
+);
+
+export default PasswordReset;
+```
+
++ Adding this page to the `/pages` directory generates the route 
++ We're currently pulling the reset token off the __url query parameter__
+
+
+__frontend/components/Reset.js__
+
+```js
+const RESET_MUTATION = gql`
+  mutation RESET_MUTATION(
+    $resetToken: String!
+    $password: String!
+    $confirmPassword: String!
+  ) {
+    resetPassword(
+      resetToken: $resetToken
+      password: $password
+      confirmPassword: $confirmPassword
+    ) {
+      id
+      email
+      name
+    }
+  }
+`;
+
+class Reset extends Component {
+  static propTypes = {
+    resetToken: PropTypes.string.isRequired
+  };
+  state = {
+    password: "",
+    confirmPassword: ""
+  };
+  saveToState = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+  render() {
+    return (
+      <Mutation
+        mutation={RESET_MUTATION}
+        variables={{
+          resetToken: this.props.resetToken,
+          password: this.state.password,
+          confirmPassword: this.state.confirmPassword
+        }}
+        refetchQueries={[{ query: CURRENT_USER_QUERY }]}
+      >
+        {(reset, { error, loading }) => (
+          <Form
+            method="post"
+            onSubmit={async e => {
+              e.preventDefault();
+              await reset();
+              this.setState({ password: "", confirmPassword: "" });
+            }}
+          >
+```
+
++ The `Reset` component sends the required variables to the reset mutation 
++ And it __refetches__ the current user
+
+
+```js
+ctx.response.cookie("token", token, {
+```
++ Pretty sure line from the `resetPassword` mutation adds a cookie with an updated JWT 
+
+### 31 Sending Email
+
++ __Mailtrap__ is a fake SMTP server
++ Would need to swap credentials to something like `Postmark` to send real emails
+
+__backend/src/mail.js__
+
+```js
+const nodemailer = require("nodemailer");
+
+const transport = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  ...
+});
+
+const makeANiceEmail = text => `
+  <div className="email" style="
+  ...
+`;
+
+exports.transport = transport;
+exports.makeANiceEmail = makeANiceEmail;
+```
++ __nodemailer__ api
++ Nice model of CommonJS `exports`, which are then `require` -ed in...
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+const { transport, makeANiceEmail } = require("../mail");
+...
+// 3. Email them that reset token
+    const mailRes = await transport.sendMail({
+      from: "winner@bestwin.yas",
+      to: user.email,
+      subject: "Your Password Reset Token",
+      html: makeANiceEmail(`Your Password Reset Token is here!
+      \n\n
+      <a href="${
+        process.env.FRONTEND_URL
+      }/reset?resetToken=${resetToken}">Click Here to Reset</a>`)
+    });
+```
+
++ ... and used in the `requestReset` mutation
++ `process.env.FRONTEND_URL` allows localhost to be used during development and then swapped out for the real hosted URL later
++ This is how the `resetToken` gets to the frontend, via an href
+
+### 32 Data Relationships
+
+__backend/datamodel.graphql__
+
+```graphql
+type Item {
+  id: ID! @unique
+  title: String!
+  ...
+  user: User!
+} 
+```
++ We add a required `user` field to an `Item` in our data model and then deploy those changes 
+
+```js
+const Mutations = {
+  async createItem(parent, args, ctx, info) {
+    if (!ctx.request.userId) {
+      throw new Error("You must be logged in to create an item");
+    }
+
+    const item = await ctx.db.mutation.createItem(
+      {
+        data: {
+          // Creates a relationship between an Item and a User
+          user: {
+            connect: { id: ctx.request.userId }
+          },
+          ...args
+        }
+      },
+      info
+    );
+    return item;
+  },
+```
++ In our mutation the `connect` key creates the relationship 
+
+### 33 Creating a Gated Sign In Component
+
+```js
+import { CURRENT_USER_QUERY } from "./User";
+import Signin from "./Signin";
+
+const PleaseSignIn = props => (
+  <Query query={CURRENT_USER_QUERY}>
+    {({ data, loading }) => {
+      if (loading) return <p>Loading...</p>;
+      if (!data.me) {
+        return (
+          <div>
+            <p>Please Sign In before Continuing</p>
+            <Signin />
+          </div>
+        );
+      }
+      return props.children;
+    }}
+  </Query>
+);
+```
++ Simple component allows us to check for signed in user on pages that should only be accessible to logged in users
+
+```js
+const Sell = props => (
+  <div>
+    <PleaseSignIn>
+      <CreateItem />
+    </PleaseSignIn>
+  </div>
+);
+```
++ Used on the `Sell` page like so
+
+### 34 Permissions Management
+
+__backend/src/schema.graphql__
+
+```graphql
+type Query {
+  ...
+  users: [User]!
+  }
+```
++ Add `users` query to schema that must return an array, which can be empty but otherwise has `User` types
+
+__backend/src/index.js__
+
+```js
+// add middleware to attach the user on each request if logged in
+server.express.use(async (req, res, next) => {
+  // If not logged in, just skip
+  if (!req.userId) return next();
+
+  const user = await db.query.user(
+    { where: { id: req.userId } },
+    `{id, permissions, email, name}`
+  );
+
+  req.user = user;
+  next();
+});
+```
++ Need to have the `user` on each request for the query below
++ _Does this add a query to every request?_
+  + _Would Apollo reference the cache to avoid a network request?_
+
+__backend/src/resolvers/Query.js__
+
+```js
+async users(parent, args, ctx, info) {
+  // 1. Check if logged in
+  if (!ctx.request.userId) {
+    throw new Error("Please log in");
+  }
+
+  // 2. Check if user has permissions to query all users
+  hasPermission(ctx.request.user, ["ADMIN", "PERMISSIONUPDATE"]);
+
+  // 3. if they do, query all the users!
+  return ctx.db.query.users({}, info);
+}
+```
++ `hasPermission` is simple util that takes a user and a set of required permissions and checks if they exists on the user
++ `ctx.db.query.users({}, info)` the `info` here contains the GraphQL query with the fields we're requesting
+
+__frontend/components/Permissions.js__
+
+```js
+const ALL_USERS_QUERY = gql`
+  query {
+    users {
+      id
+      name
+      email
+      permissions
+    }
+  }
+`;
+```
++ This video makes a mock table driven by data in our new `users` query
+
+### 35 Updating Permissions in Local State
+
+__frontend/components/Permissions.js__
+```js
+  state = {
+    permissions: this.props.user.permissions,
+  };
+```
++ Normally this is a red flag to mirror props in state
+  + But here it's fine because we're __seeding__ the state, which would then be updated in the component and saved to the backend/server via a mutation
+
+```js
+handlePermissionChange = e => {
+  const checkbox = e.target;
+  let updatedPermissions = [...this.state.permissions];
+
+  if (checkbox.checked) {
+    updatedPermissions.push(checkbox.value);
+  } else {
+    updatedPermissions = updatedPermissions.filter(
+      permission => permission !== checkbox.value
+    );
+  }
+  this.setState({ permissions: updatedPermissions });
+  console.log(updatedPermissions);
+};
+```
+
+```js
+<td key={permission}>
+  <label htmlFor={`${user.id}-permission-${permission}`}>
+    <input
+      type="checkbox"
+      checked={this.state.permissions.includes(permission)}
+      value={permission}
+      onChange={this.handlePermissionChange}
+    />
+  </label>
+</td>
+```
++ `value` attribute on input accessed as `e.target.value` in change handler
+
+### 36 Updating Permissions on the Server
+
+__/backend/src/schema.graphql__
+
+```graphql
+type Mutation {
+  ...
+  updatePermissions(permissions:[Permission], userId: ID!): User
+}
+```
+
+__backend/src/resolvers/Mutations.js__
+
+```js
+async updatePermissions(parent, args, ctx, info) {
+    // 1. Check if they are logged in
+    if (!ctx.request.userId) {
+      throw new Error("You must be logged in to update permissions");
+    }
+
+    // 2. Query the current user
+    const currentUser = ctx.db.query.user(
+      {
+        where: {
+          id: ctx.request.userId
+        }
+      },
+      info
+    );
+
+    // 3. Check if they have permissions to do this
+    hasPermission(currentUser, ["ADMIN", "PERMISSIONUPDATE"]);
+
+    // 4. Update the permissions
+    return ctx.db.mutation.updateUser(
+      {
+        data: {
+          permissions: {
+            set: args.permissions
+          }
+        },
+        where: {
+          id: args.userId
+        }
+      },
+      info
+    );
+  }
+```
+
++ `args` comes from `variables` on frontend
++  `id: args.userId` because might be updating another user, not signed in user as in `id: ctx.request.userId`
+
+__/frontend/components/Permissions.js__
+
+```js
+const UPDATE_PERMISSIONS_MUTATION = gql`
+  mutation updatePermissions($permissions: [Permission], $userId: ID!) {
+    updatePermissions(permissions: $permissions, userId: $userId) {
+      id
+      permissions
+      name
+      email
+    }
+  }
+`;
+```
+
+```js
+ render() {
+    const user = this.props.user;
+    return (
+      <Mutation
+        mutation={UPDATE_PERMISSIONS_MUTATION}
+        variables={{
+          permissions: this.state.permissions,
+          userId: this.props.user.id
+        }}
+      >
+        {(updatePermissions, { loading, error }) => (
+          <>
+            {error && (
+              <tr>
+                <td colspan="8">
+                  <Error error={error} />
+                </td>
+              </tr>
+            )}
+            <tr>
+              <td>{user.name}</td>
+              <td>{user.email}</td>
+              {possiblePermissions.map(permission => (
+                <td key={permission}>
+                  <label htmlFor={`${user.id}-permission-${permission}`}>
+                    <input
+                      id={`${user.id}-permission-${permission}`}
+                      type="checkbox"
+                      checked={this.state.permissions.includes(permission)}
+                      value={permission}
+                      onChange={this.handlePermissionChange}
+                    />
+                  </label>
+                </td>
+              ))}
+              <td>
+                <SickButton
+                  type="button"
+                  disabled={loading}
+                  onClick={updatePermissions}
+                >
+                  Updat{loading ? "ing" : "e"}
+                </SickButton>
+              </td>
+            </tr>
+          </>
+        )}
+      </Mutation>
+    );
+  }
+}
+```
+
+### 37 Locking Down DeleteItem Permissions
+
+__frontend/components/DeleteItem.js__
+
+```js
+<button
+  onClick={() => {
+    if (confirm("Are you sure you want to delete this item?")) {
+      deleteItem().catch(err => {
+        alert(err.message)
+      });
+    }
+  }}
+>
+```
+
++ Can `catch()` errors off a _promise_
+  + Here `deleteItem` is the mutation function, which returns a promise
+
+
+```js
+async deleteItem(parent, args, ctx, info) {
+  const where = { id: args.id };
+  // 1. find the item
+  const item = await ctx.db.query.item({ where }, `{ id title user { id }}`);
+
+  // 2. Check if they own that item, or have the permissions
+  const ownsItem = item.user.id === ctx.request.userId;
+  const hasPermissions = ctx.request.user.permissions.some(permission =>
+    ["ADMIN", "ITEMDELETE"].includes(permission)
+  );
+
+  if (!ownsItem && !hasPermissions) {
+    throw new Error("You don't have permission to do that!");
+  }
+  
+  ...
+},
+```
++ Had to add this field, `user { id }`, to the `item` query to access the `item.user.id` 
+
+### 39 Apollo Local State and Mutations
+
++ Very different topic now, videos 38 + 39 focus on __local state__
+  +  As in React state that would otherwise be distributed by _React context_ or Redux or the like
+  +  No server calls, just client-side data moving
+  + _PRESENT TTW_
+
+__frontend/lib/withData.js__
+
+```js
+import withApollo from "next-with-apollo";
+import ApolloClient from "apollo-boost";
+...
+import { LOCAL_STATE_QUERY } from "../components/Cart";
+
+function createClient({ headers }) {
+  return new ApolloClient({
+    ...
+    // local data
+    clientState: {
+      resolvers: {
+        Mutation: {
+          toggleCart(_, variables, { cache }) {
+            // read the cartOpen value from the cache
+            const { cartOpen } = cache.readQuery({
+              query: LOCAL_STATE_QUERY
+            });
+            // Write the cart State to the opposite
+            const data = {
+              data: { cartOpen: !cartOpen }
+            };
+            cache.writeData(data);
+            return data;
+          }
+        }
+      },
+      defaults: {
+        cartOpen: false
+      }
+    }
+  });
+}
+
+export default withApollo(createClient);
+```
+
++ __clientState__ comes from `apollo-link-state` via __Apollo Boost__
+  + We're basically accessing `cache` off the client, reading from it and then writing the new value back to it
+  + https://www.apollographql.com/docs/react/essentials/local-state.html
+
+> apollo-link-state, our solution for managing local data in Apollo Client. apollo-link-state allows you to store your local data inside the Apollo cache alongside your remote data
+
+__frontend/components/Cart.js__
+
+```js
+const LOCAL_STATE_QUERY = gql`
+  query {
+    cartOpen @client
+  }
+`;
+
+const TOGGLE_CART_MUTATION = gql`
+  mutation {
+    toggleCart @client
+  }
+`;
+
+...
+
+export { LOCAL_STATE_QUERY, TOGGLE_CART_MUTATION };
+```
++ `@client` directive tells Apollo Client’s network stack to fetch the query from the cache instead of sending it to our GraphQL server."
++ `export` the query and mutation so they're easy to use elsewhere
+  + Like in the nav where the other toggle is invoked
+
+```js
+const Cart = () => (
+  <Mutation mutation={TOGGLE_CART_MUTATION}>
+    {toggleCart => (
+      <Query query={LOCAL_STATE_QUERY}>
+        {({ data }) => (
+```
++ Think this gets revised soon, but for now accessing local state management requires nesting the `mutation` and `query`
+
+```js
+<CloseButton onClick={toggleCart} title="close">
+  &times;
+</CloseButton>
+```
++ `toggleCart` is used in a pretty straightforward way in the UI
+
+```js
+<CartStyles open={data.cartOpen}>
+```
+
+__frontend/components/styles/CartStyles.js__
+
+```js
+import styled from 'styled-components';
+
+const CartStyles = styled.div`
+  ...
+  ${props => props.open && `transform: translateX(0);`};
+```
++ Side note on __Styled Components__ accepting props and dynamically setting styles
+
+### 40 Server Side Add To Cart
+
+__backend/datamodel.graphql__
+```graphql
+type User {
+  ...
+  cart: [CartItem!]!
+}
+
+type CartItem {
+  id: ID! @unique
+  quantity: Int! @default(value: 1)
+  item: Item! #relationship to an item
+  user: User! #relationship to a user
+}
+```
++ Changed datamodel, so we need to redeploy
+
+__backend/src/schema.graphql__
+
+```graphql
+type User {
+  ...
+  cart: [CartItem!]!
+}
+```
++ Add to schema because we want it to be available both server side and client side
++ Changed schema, so we need to write a resolver
+
+__backend/src/resolvers/Mutation.js__
+
+```js
+// 2. Query the user's current cart
+const [existingCartItem] = await ctx.db.query.cartItems({
+  where: {
+    user: { id: userId },
+    item: { id: args.id }
+  }
+});
+```
++ `cartItems` was generated by Prisma when we deployed changes to the data model
+ + It allows for more flexible query parameters/arguments to find items
+ + Weird to me that we only added `cartItem` to data model but Prisma infers and exposes a plural query
+
+__backend/src/generated/prisma.graphql__
+
+```graphql
+type Query {
+  ...
+  cartItems(where: CartItemWhereInput, orderBy: CartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CartItem]!
+  cartItem(where: CartItemWhereUniqueInput!): CartItem
+}
+
+input CartItemWhereInput {
+  """Logical AND on all given filters."""
+  AND: [CartItemWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [CartItemWhereInput!]
+  ...
+  # LOADS MORE OPTIONS FOR WHERE QUERY PARAMS
+}
+
+input CartItemWhereUniqueInput {
+  id: ID
+}
+```
+
+__backend/src/resolvers/Mutation.js__
+```js
+ // 3. Check if item is already in cart and increment by 1
+if (existingCartItem) {
+  return ctx.db.mutation.updateCartItem(
+    {
+      where: { id: existingCartItem.id },
+      data: { quantity: existingCartItem.quantity + 1 }
+    },
+    info
+  );
+}
+```
++ The quantity field is specified on the `CartItem` type, which is returned from the `cartItems` query
+
+__backend/src/generated/prisma.graphql__
+```graphql
+input CartItemUpdateInput {
+  quantity: Int
+  item: ItemUpdateOneRequiredInput
+  user: UserUpdateOneRequiredWithoutCartInput
+}
+```
++ These fields are from the CartItem that we specified in video 40
++ `item` and `user` make sense because we've set up a relationship to those types when defining the type in our own data model
++ `quantity` is on there because we also included that field at definition
+
+__backend/src/resolvers/Mutation.js__
+```js
+// 4. If not create a new cartItem for the user
+return ctx.db.mutation.createCartItem(
+  {
+    data: {
+      user: {
+        connect: { id: userId }
+      },
+      item: {
+        connect: { id: args.id }
+      }
+    }
+  },
+  info
+);
+```
++ `connect` is how we communicate the relationship between the data objects in Prisma
++ The user in the database will now have a `cart` field
+
+### 41 Displaying Cart Items and Totals
+
+```js
+const CURRENT_USER_QUERY = gql`
+  query {
+    me {
+      id
+      email
+      name
+      permissions
+      cart {
+        id
+        quantity
+        item {
+          id
+          price
+          image
+          title
+          description
+        }
+      }
+    }
+  }
+`;
+
+const User = props => (
+  <Query {...props} query={CURRENT_USER_QUERY}>
+    {payload => props.children(payload)}
+  </Query>
+);
+
+User.propTypes = {
+  children: PropTypes.func.isRequired
+};
+
+export default User;
+export { CURRENT_USER_QUERY };
+```
++ Adding `cart` fields that are passed through to components wrapped in a `User` component
+
+```js
+import { CURRENT_USER_QUERY } from "./User";
+
+...
+
+const ADD_TO_CART_MUTATION = gql`
+  mutation addToCart($id: ID!) {
+    addToCart(id: $id) {
+      id
+      quantity
+    }
+  }
+`;
+
+class AddToCart extends React.Component {
+  render() {
+    const { id } = this.props;
+    return (
+      <Mutation
+        mutation={ADD_TO_CART_MUTATION}
+        variables={{
+          id
+        }}
+        refetchQueries={[{ query: CURRENT_USER_QUERY }]}
+      >
+        {(addToCart, { loading }) => (
+          <button disabled={loading} onClick={addToCart}>
+            Add{loading && "ing"} To Cart 🛒
+          </button>
+        )}
+      </Mutation>
+    );
+  }
+}
+```
++ `refetchQueries` is effective here because we've added the cart fields to the `CURRENT_USER_QUERY`
+ + composition of the queries allows that _user_ query to take care of the updates which need refetching
+
+### 42 Removing Cart Items
+
+__src/resolvers/Mutation.js__ 
+
+```js
+async removeFromCart(parent, args, ctx, info) {
+  // 1. Find the cart item
+  const cartItem = await ctx.db.query.cartItem(
+    {
+      where: {
+        id: args.id
+      }
+    },
+    `{ id, user { id }}`
+  );
+```
++ We want to get the `user { id }` off the `CartItem` type returned by `query.cartItem`
+ + Why do we have to query for it in the second parameter?
+ + Are we just specifying the shape of the returned data we want?
+
+```js
+// 2. Make sure they own that cart item
+if (cartItem.user.id !== ctx.request.userId) {
+  throw new Error("Cheatin huhhhh");
+}
+```
++ Query in first code snippet allows us to make this comparison in the if statement
+
+### 43 Optimistic Response && Cache Updates with Apollo
+
++ Could refetch `CURRENT_USER_QUERY`, but that has a bit too much lag 
+  + Choosing instead to update cache manually
+
+__frontend/components/RemoveFromCart.js__
+```js
+// This gets called as soon as we get a response back from the server after a mutation has been performed
+update = (cache, payload) => {
+  // 1. first read the cache
+  const data = cache.readQuery({ query: CURRENT_USER_QUERY });
+  // 2. remove that item from the cart
+  const cartItemId = payload.data.removeFromCart.id;
+  data.me.cart = data.me.cart.filter(cartItem => cartItem.id !== cartItemId);
+  // 3. write it back to the cache
+  cache.writeQuery({ query: CURRENT_USER_QUERY, data });
+};
+
+render() {
+  return (
+    <Mutation
+      mutation={REMOVE_FROM_CART_MUTATION}
+      variables={{ id: this.props.id }}
+      update={this.update}
+    >
+```
++ `payload` is coming from the mutation, which gives us the removed item id
+ + The `data` value is coming from the cache, as queried by an imported query
+ + We're combining the two sources to manually update the cache
+ + We've done this before in the `DeleteItem` component
+
+ ```js
+<Mutation
+  mutation={REMOVE_FROM_CART_MUTATION}
+  variables={{ id: this.props.id }}
+  update={this.update}
+  optimisticResponse={{
+    __typename: "Mutation",
+    removeFromCart: {
+      __typename: "CartItem",
+      id: this.props.id
+    }
+  }}
+>
+```
++ `optimisticResponse` requires types on the client side
+  + This allows for an immediate front end response, which the update to the cache will take slightly longer  
+  + https://www.apollographql.com/docs/react/features/optimistic-ui.html#optimistic-advanced
+
+> optimistic UI is a pattern that you can use to simulate the results of a mutation and update the UI even before receiving a response from the server. Once the response is received from the server, the optimistic result is thrown away and replaced with the actual result.
+
+### 44 Animating our Cart Count Component
+
+__frontend/components/CartCount.js__
+
+```js
+const Dot = styled.div`
+  ...
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+`;
+```
++ `font-feature-settings` always allot the same amount of space to a number, regardless of if it's fat or skinny (1 vs 2)
+ + So div/background won't resize between numbers
+
+
+```js
+import { TransitionGroup, CSSTransition } from "react-transition-group";
+
+...
+
+const AnimationStyles = styled.span`
+  position: relative;
+  .count {
+    display: block;
+    position: relative;
+    transition: all 0.4s;
+    backface-visibility: hidden;
+  }
+
+  .count-enter {
+    transform: scale(4) rotateX(0.5turn);
+  }
+  .count-enter-active {
+    transform: rotateX(0);
+  }
+  .count-exit {
+    top: 0;
+    position: absolute;
+    transform: rotateX(0);
+  }
+  .count-exit-active {
+    transform: scale(4) rotateX(0.5turn);
+  }
+`;
+
+...
+
+const CartCount = ({ count }) => (
+  <AnimationStyles>
+    <TransitionGroup>
+      <CSSTransition
+        unmountOnExit
+        className="count"
+        classNames="count"
+        key={count}
+        timeout={{ enter: 400, exit: 400 }}
+      >
+        <Dot>{count}</Dot>
+      </CSSTransition>
+    </TransitionGroup>
+  </AnimationStyles>
+);
+```
+
++ Allow us to transition out/in components (mount, transition in, remove transition classes, unmount outgoing element)
++ `classNames` auto generates things like `.count-enter-active`
+
+### 46 Cleaning up this Render Prop Mess
+
+__/frontend/components/Cart.js__
+```js
+import { adopt } from "react-adopt";
+
+...
+
+const Composed = adopt({
+  user: ({ render }) => <User>{render}</User>,
+  toggleCart: ({ render }) => (
+    <Mutation mutation={TOGGLE_CART_MUTATION}>{render}</Mutation>
+  ),
+  localState: ({ render }) => <Query query={LOCAL_STATE_QUERY}>{render}</Query>
+});
+
+...
+
+const Cart = () => (
+  <Composed>
+    {({ user, toggleCart, localState }) => {
+      const me = user.data.me;
+      if (!me) return null;
+      return (
+        <CartStyles open={localState.data.cartOpen}>
+        ...
+
+```
++ __react-adopt__ allows us to compose several layers of components with nested render props into one 
++ payload allows us to destructure the three render prop components into a single composed render prop component
+
+
+__BEFORE REFACTOR:__
+```js
+const Cart = () => (
+  <User>
+    {({ data: { me } }) => {
+      if (!me) return null;
+      return (
+        <Mutation mutation={TOGGLE_CART_MUTATION}>
+          {toggleCart => (
+            <Query query={LOCAL_STATE_QUERY}>
+              {({ data }) => (
+                <CartStyles open={data.cartOpen}>
+                  <header>
+                    ...
+  </User>
+);
+```
+
+### 47 Search Dropdown Autocomplete
+
+__/frontend/components/Search.js__
+
+```js
+const SEARCH_ITEMS_QUERY = gql`
+  query SEARCH_ITEMS_QUERY($searchTerm: String!) {
+    item(
+      where: {
+        OR: [
+          { title_contains: $searchTerm }
+          { description_contains: $searchTerm }
+        ]
+      }
+    ) {
+      id
+      image
+      title
+    }
+  }
+`;
+```
+
+__backend/src/schema.graphql__
+
+```graphql
+type Query {
+  items(where: ItemWhereInput, orderBy: ItemOrderByInput, skip: Int, first: Int): [Item]!
+```
+
++ `items` query as specified in our schema accepts `ItemWhereInput` type `where` parameter
+ + This is generated by prisma and allows a set of query tools like `contains` on each field of the returned type (here an `Item`)
+
+```js
+import { ApolloConsumer } from "react-apollo";
+
+...
+
+class AutoComplete extends React.Component {
+  state = {
+    items: [],
+    loading: false
+  };
+  onChange = debounce(async (e, client) => {
+    // turn loading on
+    this.setState({ loading: true });
+    // Manually query apollo client
+    const res = await client.query({
+      query: SEARCH_ITEMS_QUERY,
+      variables: { searchTerm: e.target.value }
+    });
+    this.setState({
+      items: res.data.items,
+      loading: false
+    });
+  }, 350);
+  render() {
+    return (
+      <SearchStyles>
+        <div>
+          <ApolloConsumer>
+            {client => (
+              <input
+                type="search"
+                onChange={e => {
+                  e.persist();
+                  this.onChange(e, client);
+                }}
+              />
+            )}
+          </ApolloConsumer>
+```
+
++ Importing __ApolloConsumer__ directly allows us to choose when to fire the query
+  + As opposed to it happening on page load, as with the `Query` component
+  + We then need to handle our own loading state
++ `debounce` pauses queries just long enough (350ms here) to avoid fast typing sending queries one after the other too quickly, which could DDoS your own site
