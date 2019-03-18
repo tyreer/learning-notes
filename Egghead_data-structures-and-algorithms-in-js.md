@@ -3,6 +3,8 @@
 Course by __Kyle Shevlin__
 https://egghead.io/courses/data-structures-and-algorithms-in-javascript
 
+CodeSandbox code samples: https://codesandbox.io/s/github/eggheadio-projects/intro-to-data-structures-and-algorithms/tree/master/
+
 
 ### Queue Data Structure in JavaScript
 https://egghead.io/lessons/javascript-queue-data-structure-in-javascript
@@ -163,3 +165,182 @@ exports.createStack = createStack
 
 ### Linked List Data Structure in JavaScript
   
+>A linked list is a collection of items where each item points to the next one in the list. Because of this structure, linked lists are very slow when searching for an item at a particular index. An array, by comparison, has quick gets when searching for an index, but a linked list must start at the beginning, often called the "head", and loop through each item's next property until we arrive at the item. 
+
+https://medium.freecodecamp.org/data-structures-101-linked-lists-254c82cf5883
+> With linked lists, our primary concerns are with fast insertions and deletions, which are more performant over arrays.
+>It may come to mind that unshift for arrays is the same. No, because with unshift all members of the collection must be moved one index over.
+>The main advantage of linked lists is fast insertions and deletions without rearranging items or reallocation of space. When we use an array, the memory space is contiguous, meaning we keep it all together. With linked lists, we can have memory spaces all over the place, non-contiguous storage through the use of references. For arrays, that locality of references means that arrays have better caching of values for faster lookup. With linked lists, caching is not optimized and access time takes longer.
+
+```js
+function createNode(value) {
+  return {
+    value,
+    next: null
+  }
+}
+```
++ Single node in a linked list
+ + Need `next` to point to next node
+ + A `next` value of `null` means it's the `tail` (or final node)
+
+```js
+function createLinkedList() {
+  return {
+    head: null,
+    tail: null,
+    length: 0,
+
+    push(value) {
+      const node = createNode(value)
+
+      if (this.head === null) {
+        this.head = node
+        this.tail = node
+        this.length++
+        return node
+      }
+
+      this.tail.next = node
+      this.tail = node
+      this.length++
+
+      return node
+    },
+    
+    ...
+```
+
+### JavaScript Graph Data Structure
+
++ __edges__ are relationships
++ __directed__ means one-way
++ __undirected__ means both ways
+
+>Graphs are a powerful and versatile data structure that easily allow you to represent real life relationships between different types of data (nodes).
+https://medium.freecodecamp.org/a-gentle-introduction-to-data-structures-how-graphs-work-a223d9ef8837
+
++ Facebook uses this data structure to store relationships like friends
+  + TAO: The power of the graph https://www.facebook.com/notes/facebook-engineering/tao-the-power-of-the-graph/10151525983993920/
+
+```js
+function createNode(key) {
+  const children = []
+
+  return {
+    key,
+    children,
+    addChild(node) {
+      children.push(node)
+    }
+  }
+}
+```
++ A sensible way to structure a node in a graph
+
+```js
+function createGraph(directed = false) {
+  const nodes = []
+  const edges = []
+
+  return {
+    directed,
+    nodes,
+    edges,
+
+    addNode(key) {
+      nodes.push(createNode(key))
+    },
+
+    getNode(key) {
+      return nodes.find(n => n.key === key)
+    },
+
+    addEdge(node1Key, node2Key) {
+      const node1 = this.getNode(node1Key)
+      const node2 = this.getNode(node2Key)
+
+      node1.addChild(node2)
+
+      if (!directed) {
+        node2.addChild(node1)
+      }
+
+      edges.push(`${node1Key}${node2Key}`)
+    },
+```
+
+### Breadth First JavaScript Search Algorithm for Graphs
+
+>Breadth first search is a graph search algorithm that starts at one node and visits neighboring nodes as widely as possible before going further down any other path.
+ + This is a common __tree traversal strategy__
+
+https://medium.com/basecs/breaking-down-breadth-first-search-cebe696709d9
+> Breadth-first search involves search through a tree one level at a time.
+> We traverse through one entire level of children nodes first, before moving on to traverse through the grandchildren nodes. And we traverse through an entire level of grandchildren nodes before going on to traverse through great-grandchildren nodes.
+
+```js
+bfs(startingNodeKey, visitFn) {
+  const startingNode = this.getNode(startingNodeKey)
+  const visitedHash = nodes.reduce((acc, cur) => {
+    acc[cur.key] = false
+    return acc
+  }, {})
+  const queue = createQueue()
+  queue.enqueue(startingNode)
+
+  while (!queue.isEmpty()) {
+    const currentNode = queue.dequeue()
+
+    if (!visitedHash[currentNode.key]) {
+      visitFn(currentNode)
+      visitedHash[currentNode.key] = true
+    }
+
+    currentNode.children.forEach(node => {
+      if (!visitedHash[node.key]) {
+        queue.enqueue(node)
+      }
+    })
+  }
+},
+```
++ Method fot visiting every node in the graph
+
+```js
+const visitedHash = nodes.reduce((acc, cur) => {
+  acc[cur.key] = false
+  return acc
+}, {})
+```
++ Interesting use of `reduce()` to build an object
+
+```js
+const graph = createGraph(true)
+const nodes = ['a', 'b', 'c', 'd', 'e', 'f']
+const edges = [
+  ['a', 'b'],
+  ['a', 'e'],
+  ['a', 'f'],
+  ['b', 'd'],
+  ['b', 'e'],
+  ['c', 'b'],
+  ['d', 'c'],
+  ['d', 'e']
+]
+
+nodes.forEach(node => {
+  graph.addNode(node)
+})
+
+edges.forEach(nodes => {
+  graph.addEdge(...nodes)
+})
+
+graph.bfs('a', node => {
+  console.log(node.key)
+})
+```
+
++ Note how parameters of `bfs()` line up to its signature: `bfs(startingNodeKey, visitFn)`
++ Interesting to see nodes and edges illustrated like this
