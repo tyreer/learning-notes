@@ -167,6 +167,10 @@ exports.createStack = createStack
   
 >A linked list is a collection of items where each item points to the next one in the list. Because of this structure, linked lists are very slow when searching for an item at a particular index. An array, by comparison, has quick gets when searching for an index, but a linked list must start at the beginning, often called the "head", and loop through each item's next property until we arrive at the item. 
 
+https://medium.com/basecs/whats-a-linked-list-anyway-part-1-d8b7e6508b9d
++ array = __linear data structure__
++ linked list = __non-linear data structure__
+
 https://medium.freecodecamp.org/data-structures-101-linked-lists-254c82cf5883
 > With linked lists, our primary concerns are with fast insertions and deletions, which are more performant over arrays.
 >It may come to mind that unshift for arrays is the same. No, because with unshift all members of the collection must be moved one index over.
@@ -237,6 +241,10 @@ function createNode(key) {
 }
 ```
 + A sensible way to structure a node in a graph
+  + Interesting to note how different each key on the node object is
+  + `key` is just a string
+  + `children` is an array
+  + `addChild` is a function 
 
 ```js
 function createGraph(directed = false) {
@@ -344,3 +352,34 @@ graph.bfs('a', node => {
 
 + Note how parameters of `bfs()` line up to its signature: `bfs(startingNodeKey, visitFn)`
 + Interesting to see nodes and edges illustrated like this
+
+### Write a Depth First Search Algorithm for Graphs in JavaScript
+
+https://medium.com/basecs/demystifying-depth-first-search-a7c14cccf056
++ Another common __tree traversal strategy__
+
+```js
+dfs(startingNodeKey, visitFn) {
+  const startingNode = this.getNode(startingNodeKey)
+  const visitedHash = nodes.reduce((acc, cur) => {
+    acc[cur.key] = false
+    return acc
+  }, {})
+
+  function explore(node) {
+    if (visitedHash[node.key]) {
+      return
+    }
+
+    visitFn(node)
+    visitedHash[node.key] = true
+
+    node.children.forEach(child => {
+      explore(child)
+    })
+  }
+
+  explore(startingNode)
+}
+```
++ Goes down through each `child` of a given node before moving onto the next node (which ultimately is a child of the `startingNode`)

@@ -4226,3 +4226,86 @@ function type(wrapper, name, value) {
 }
 ```
 + Handy text input simulator
+
+### 64 Testing our Cart
+
++ Testing the local queries isn't covered. More trouble than it's worth.
+
+
+__frontend/tests/RemoveFromCart.test.js__
+```js
+global.alert = console.log;
+```
++ Tests running on server, so `alert` will flag a missing `Window` error
+
+
+__frontend/tests/AddToCart.test.js__
+
+```js
+const mocks = [
+  {
+    request: { query: CURRENT_USER_QUERY },
+    result: {
+      data: {
+        me: {
+          ...fakeUser(),
+          cart: [],
+        },
+      },
+    },
+  },
+  {
+    request: { query: CURRENT_USER_QUERY },
+    result: {
+      data: {
+        me: {
+          ...fakeUser(),
+          cart: [fakeCartItem()],
+        },
+      },
+    },
+  },
+  {
+    request: { query: ADD_TO_CART_MUTATION, variables: { id: 'abc123' } },
+    result: {
+      data: {
+        addToCart: {
+          ...fakeCartItem(),
+          quantity: 1,
+        },
+      },
+    },
+  },
+];
+```
+
+```js
+ it('adds an item to cart when clicked', async () => {
+    let apolloClient;
+    const wrapper = mount(
+      <MockedProvider mocks={mocks}>
+        <ApolloConsumer>
+          {client => {
+            apolloClient = client;
+            return <AddToCart id="abc123" />;
+          }}
+        </ApolloConsumer>
+      </MockedProvider>
+    );
+    await wait();
+    wrapper.update();
+    const { data: { me } } = await apolloClient.query({ query: CURRENT_USER_QUERY });
+    // console.log(me);
+    expect(me.cart).toHaveLength(0);
+    // add an item to the cart
+    wrapper.find('button').simulate('click');
+    await wait();
+    // check if the item is in the cart
+    const { data: { me: me2 } } = await apolloClient.query({ query: CURRENT_USER_QUERY });
+    expect(me2.cart).toHaveLength(1);
+    expect(me2.cart[0].id).toBe('omg123');
+    expect(me2.cart[0].quantity).toBe(3);
+  });
+  ```
+
+  + Interesting how __second__ query to `CURRENT_USER_QUERY` gets mocked
