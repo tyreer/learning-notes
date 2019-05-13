@@ -3047,7 +3047,7 @@ render() {
 ```
 > Only if you are running an universal React app that is rendered on the server you should call resetIdCounter before every render so that the ids that get generated on the server match the ids generated in the browser.
 
-# 49. Credit Card Processing with Stripe Checkout 
+### 49. Credit Card Processing with Stripe Checkout 
 
 ```js
 
@@ -3094,7 +3094,7 @@ class TakeMyMoney extends React.Component {
   + Instead we pass the one-time details of the purchase and Stripe's modal handles the input/transfer of CC details
   + We just use the one-time token returned
 
-# 50. Charging Cards on the Server Side
+### 50. Charging Cards on the Server Side
 
 __backend/datamodel.graphql__
 
@@ -3230,7 +3230,7 @@ class TakeMyMoney extends React.Component {
 + Adding our new mutation `createOrder` to the front end 
   + Pass in the Stripe token as variable
 
-# 51. Saving Orders to the Database
+### 51. Saving Orders to the Database
 
 __backend/src/resolvers/Mutation.js__
 ```js
@@ -3281,7 +3281,7 @@ async createOrder(parent, args, ctx, info) {
 + Once we get into `createOrder`, I think this is how the `orderItems` get their ids `items: { create: orderItems },`
 + `deleteManyCartItems` +  `where: { id_in: ...}` are both Prisma APIs
 
-# 52 Displaying Single Items
+### 52 Displaying Single Items
 
 __backend/src/schema.graphql__
 ```graphql
@@ -3475,7 +3475,7 @@ class Order extends React.Component {
 + Then mostly a lot of templating
  + Uses the `format` library for the date
 
-# 53 Orders Page
+### 53 Orders Page
 
 __schema__
 ```graphql
@@ -3554,7 +3554,7 @@ class OrderList extends React.Component {
                     <p>{formatDistance(order.createdAt, new Date())}</p>
 ```
 
-# 54 Testing with Jest and Enzyme
+### 54 Testing with Jest and Enzyme
 
 __package.json__
 ```json
@@ -3583,7 +3583,7 @@ configure({ adapter: new Adapter() });
 + __Adapter__ will change with each version of React that gets released
 
 
-# 55 Unit Testing 101
+### 55 Unit Testing 101
 
 + Course will have a single _/tests_ folder, but work projects would likely have a component folder with index and tests inside
 
@@ -3602,7 +3602,7 @@ describe("formatMoney Function", () => {
 + `it`: defines an expectation
 + `expect`: the logic to test an assertion
 
-# 56 Mocking 101
+### 56 Mocking 101
 
 ```js
 function Person(name, foods) {
@@ -3630,7 +3630,7 @@ me.fetchFavFoods = jest.fn().mockResolvedValue(['sushi', 'ramen']);
 ```
 + Model of mocking a fetch query
 
-# 57 First Tests and Shallow Rendering
+### 57 First Tests and Shallow Rendering
 
 __item.test.js__
 
@@ -3654,7 +3654,7 @@ describe("<Item />", () => {
 + __Shallow wrapper__ rendering
  + A lot of traversal and brittle if anything changes
 
- # 58 Snapshot testing
+### 58 Snapshot testing
 
 ```js
 import { shallow, mount } from 'enzyme';
@@ -3802,3 +3802,427 @@ it("Errors with a not found item", async () => {
 });
 ```
 + Adding the `data-test` attribute helps select the element we want a snapshot of 
+
+### 60 More Apollo Query Testing
+
+__frontend/tests/PleaseSignIn.test.js__
+
+```js
+import { mount } from 'enzyme';
+import wait from 'waait';
+import PleaseSignIn from '../components/PleaseSignIn';
+import { CURRENT_USER_QUERY } from '../components/User';
+import { MockedProvider } from 'react-apollo/test-utils';
+import { fakeUser } from '../lib/testUtils';
+
+const notSignedInMocks = [
+  {
+    request: { query: CURRENT_USER_QUERY },
+    result: { data: { me: null } },
+  },
+];
+
+const signedInMocks = [
+  {
+    request: { query: CURRENT_USER_QUERY },
+    result: { data: { me: fakeUser() } },
+  },
+];
+```
++ `result` is what comes through as `data.me` via the query payload
+ + The `me` query returns a `User` type, which we've mimiced in the `fakeUser()` return
+
+```js
+ const fakeUser = () => ({
+  __typename: 'User',
+  id: '4234',
+  name: casual.name,
+  email: casual.email,
+  permissions: ['ADMIN'],
+  orders: [],
+  cart: [],
+});
+```
+
+```js
+describe("<PleaseSignIn/>", () => {
+  it("renders the sign in dialog to logged out users", async () => {
+    const wrapper = mount(
+      <MockedProvider mocks={notSignedInMocks}>
+        <PleaseSignIn />
+      </MockedProvider>
+    );
+    await wait();
+    wrapper.update();
+    expect(wrapper.text()).toContain("Please Sign In before Continuing");
+    const SignIn = wrapper.find("Signin");
+    expect(SignIn.exists()).toBe(true);
+  });
+```
+
+```js
+it("renders the child component when the user is signed in", async () => {
+  const Hey = () => <p>Hey!</p>;
+  const wrapper = mount(
+    <MockedProvider mocks={signedInMocks}>
+      <PleaseSignIn>
+        <Hey />
+      </PleaseSignIn>
+    </MockedProvider>
+  );
+
+  await wait();
+  wrapper.update();
+  // expect(wrapper.find('Hey').exists()).toBe(true);
+  expect(wrapper.contains(<Hey />)).toBe(true);
+});
+```
+
+__/frontend/tests/Nav.test.js__
+
+```js
+const signedInMocksWithCartItems = [
+  {
+    request: { query: CURRENT_USER_QUERY },
+    result: {
+      data: {
+        me: {
+          ...fakeUser(),
+          cart: [fakeCartItem(), fakeCartItem(), fakeCartItem()]
+        }
+      }
+    }
+  }
+];
+```
++ Nice use of spread operator and an override on the `cart` attribute
+
+```js
+describe("<Nav/>", () => {
+  it("renders a minimal nav when signed out", async () => {
+    const wrapper = mount(
+      <MockedProvider mocks={notSignedInMocks}>
+        <Nav />
+      </MockedProvider>
+    );
+    await wait();
+    wrapper.update();
+    // console.log(wrapper.debug());
+    const nav = wrapper.find('ul[data-test="nav"]');
+    expect(toJSON(nav)).toMatchSnapshot();
+  });
+```
++ __Styled Components__ will add attributes to both parent and child elements, so there's a need to specify the `ul` in the `find()`
++ This case is able to use a __snapshot__, but the another test can't because the logout mutation makes the snapshot massive
+
+```js
+const nav = wrapper.find('[data-test="nav"]');
+const count = nav.find("div.count");
+expect(toJSON(count)).toMatchSnapshot();
+```
++ A more narrowly rendered snapshot
+
+### 61 Testing Pagination
+
+__/frontend/tests/Pagination.test.js__
+
+```js
+function makeMocksFor(length) {
+  return [
+    {
+      request: { query: PAGINATION_QUERY },
+      result: {
+        data: {
+          itemsConnection: {
+            __typename: "aggregate",
+            aggregate: {
+              count: length,
+              __typename: "count"
+            }
+          }
+        }
+      }
+    }
+  ];
+}
+```
++ Not sure why we need to include `__typename`
+  + But if you remove it you'll get a warning asking for it and then tests will break
+  + We also use `__typename` in `optimisticResponse` in `RemoveFromCart` and in all the fake data 
+
+
+```js
+describe("<Pagination/>", () => {
+  it("renders pagination for 18 items", async () => {
+    const wrapper = mount(
+      <MockedProvider mocks={makeMocksFor(18)}>
+        <Pagination page={1} />
+      </MockedProvider>
+    );
+    await wait();
+    wrapper.update();
+    expect(wrapper.find(".totalPages").text()).toEqual("5");
+    const pagination = wrapper.find('div[data-test="pagination"]');
+    expect(toJSON(pagination)).toMatchSnapshot();
+  });
+```
++ Checking that 18 items results in 5 pages
+
+```js
+it("disables prev button on first page", async () => {
+  const wrapper = mount(
+    <MockedProvider mocks={makeMocksFor(18)}>
+      <Pagination page={1} />
+    </MockedProvider>
+  );
+  await wait();
+  wrapper.update();
+  expect(wrapper.find("a.prev").prop("aria-disabled")).toEqual(true);
+  expect(wrapper.find("a.next").prop("aria-disabled")).toEqual(false);
+});
+```
+
+### 62 Testing Mutations
+
+__/frontend/tests/RequestReset.test.js__
+
+```js
+const mocks = [
+  {
+    request: {
+      query: REQUEST_RESET_MUTATION,
+      variables: { email: 'wesbos@gmail.com' },
+    },
+    result: {
+      data: { requestReset: { message: 'success', __typename: 'Message' } },
+    },
+  },
+];
+```
+
+```js
+describe('<RequestReset/>', () => {
+  it('calls the mutation', async () => {
+    const wrapper = mount(
+      <MockedProvider mocks={mocks}>
+        <RequestReset />
+      </MockedProvider>
+    );
+    // simulate typing an email
+    wrapper
+      .find('input')
+      .simulate('change', { target: { name: 'email', value: 'wesbos@gmail.com' } });
+    // submit the form
+    wrapper.find('form').simulate('submit');
+    await wait();
+    wrapper.update();
+    expect(wrapper.find('p').text()).toContain('Success! Check your email for a reset link!');
+  });
+```
+
++ `simulate` is provided by Enzyme to allow faux events
+  + With `change`, we provide `simulate` with an object like what the typing event would send, or at least what we'd use:
+
+__frontend/components/RequestReset.js__
+```js   
+saveToState = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+```
+
+__/frontend/tests/CreateItem.test.js__
+
+```js
+describe('<CreateItem/>', () => {
+  it('renders and matches snapshot', async () => {
+    const wrapper = mount(
+      <MockedProvider>
+        <CreateItem />
+      </MockedProvider>
+    );
+    const form = wrapper.find('form[data-test="form"]');
+    expect(toJSON(form)).toMatchSnapshot();
+  });
+```
++ `data-test` attribute on component form is as below:
+
+```js
+<Form
+  data-test="form"
+```
+
+```js
+const dogImage = 'https://dog.com/dog.jpg';
+
+// mock the global fetch API
+global.fetch = jest.fn().mockResolvedValue({
+  json: () => ({
+    secure_url: dogImage,
+    eager: [{ secure_url: dogImage }],
+  }),
+});
+```
++ Need to mock the `fetch` api via `jest.fn().mockResolvedValue` 
+
+
+__frontend/components/CreateItem.js__
+
+```js
+const res = await fetch(
+    "https://api.cloudinary.com/v1_1/drh2gik6v/image/upload",
+    {
+      method: "POST",
+      body: data
+    }
+  );
+  const file = await res.json();
+  this.setState({
+    image: file.secure_url,
+    largeImage: file.eager[0].secure_url
+  });
+```
+
++ This use in the component guides our reconstruction of `mockResolvedValue` in the test
+
+```js
+it('uploads a file when changed', async () => {
+  const wrapper = mount(
+    <MockedProvider>
+      <CreateItem />
+    </MockedProvider>
+  );
+  const input = wrapper.find('input[type="file"]');
+  input.simulate('change', { target: { files: ['fakedog.jpg'] } });
+  await wait();
+  const component = wrapper.find('CreateItem').instance();
+  expect(component.state.image).toEqual(dogImage);
+  expect(component.state.largeImage).toEqual(dogImage);
+  expect(global.fetch).toHaveBeenCalled();
+  global.fetch.mockReset();
+});
+```
++ Checking that the state was updated as expected
++ And that the mocked `fetch` was called
++ And then resetting the global mock `fetch`
+
+```js
+it('handles state updating', async () => {
+    const wrapper = mount(
+      <MockedProvider>
+        <CreateItem />
+      </MockedProvider>
+    );
+    wrapper.find('#title').simulate('change', { target: { value: 'Testing', name: 'title' } });
+    wrapper
+      .find('#price')
+      .simulate('change', { target: { value: 50000, name: 'price', type: 'number' } });
+    wrapper
+      .find('#description')
+      .simulate('change', { target: { value: 'This is a really nice item', name: 'description' } });
+
+    expect(wrapper.find('CreateItem').instance().state).toMatchObject({
+      title: 'Testing',
+      price: 50000,
+      description: 'This is a really nice item',
+    });
+  });
+```
++ Readable test
+
+```js
+  it('creates an item when the form is submitted', async () => {
+    const item = fakeItem();
+    const mocks = [
+      {
+        request: {
+          query: CREATE_ITEM_MUTATION,
+          variables: {
+            title: item.title,
+            description: item.description,
+            image: '',
+            largeImage: '',
+            price: item.price,
+          },
+        },
+        result: {
+          data: {
+            createItem: {
+              ...fakeItem,
+              id: 'abc123',
+              __typename: 'Item',
+            },
+          },
+        },
+      },
+    ];
+
+    const wrapper = mount(
+      <MockedProvider mocks={mocks}>
+        <CreateItem />
+      </MockedProvider>
+    );
+    // simulate someone filling out the form
+    wrapper.find('#title').simulate('change', { target: { value: item.title, name: 'title' } });
+    wrapper
+      .find('#price')
+      .simulate('change', { target: { value: item.price, name: 'price', type: 'number' } });
+    wrapper
+      .find('#description')
+      .simulate('change', { target: { value: item.description, name: 'description' } });
+    // mock the router
+    Router.router = { push: jest.fn() };
+    wrapper.find('form').simulate('submit');
+    await wait(50);
+    expect(Router.router.push).toHaveBeenCalled();
+    expect(Router.router.push).toHaveBeenCalledWith({ pathname: '/item', query: { id: 'abc123' } });
+  });
+});
+```
++ Mega test
++ Mocking the returned value from the mutation
++ Mocking the __router__ via `jest.fn()` and `toHaveBeenCalledWith` 
+
+
+### 63 More Apollo Client Mutation Testing
+
+Models how `refetchQueries` can be tested
+
+```js
+ it("calls the mutation properly", async () => {
+    let apolloClient;
+    const wrapper = mount(
+      <MockedProvider mocks={mocks}>
+        <ApolloConsumer>
+          {client => {
+            apolloClient = client;
+            return <Signup />;
+          }}
+        </ApolloConsumer>
+      </MockedProvider>
+    );
+    await wait();
+    wrapper.update();
+    type(wrapper, "name", me.name);
+    type(wrapper, "email", me.email);
+    type(wrapper, "password", "wes");
+    wrapper.update();
+    wrapper.find("form").simulate("submit");
+    await wait();
+    // query the user out of the apollo client
+    const user = await apolloClient.query({ query: CURRENT_USER_QUERY });
+    expect(user.data.me).toMatchObject(me);
+  });
+  ```
+  + Need to extract the `apolloClient` from the provider to call `query()` directly
+    + I think this allows us to test the `refetchQueries` part of the `Signup` component
+    + We did something similar in the `Search` component (video #47)
+
+
+```js
+function type(wrapper, name, value) {
+  wrapper.find(`input[name="${name}"]`).simulate("change", {
+    target: { name, value }
+  });
+}
+```
++ Handy text input simulator
