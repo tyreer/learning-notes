@@ -246,7 +246,7 @@ Router.onRouteChangeError = () => {
 
 ### 11 - Getting Setup with Prisma
 
-Initializing Prisma createas two files:
+Initializing Prisma creates two files:
 + prisma.yml: Prisma service definition
 + datamodel.graphql: GraphQL SDL-based datamodel (foundation for database)
 
@@ -2395,6 +2395,8 @@ export default withApollo(createClient);
 
 > apollo-link-state, our solution for managing local data in Apollo Client. apollo-link-state allows you to store your local data inside the Apollo cache alongside your remote data
 
++ NOTE: `apollo-link-state` was deprecated in 2.5: https://www.apollographql.com/docs/react/essentials/local-state/#migrating-from-apollo-link-state
+
 __frontend/components/Cart.js__
 
 ```js
@@ -4309,3 +4311,86 @@ const mocks = [
   ```
 
   + Interesting how __second__ query to `CURRENT_USER_QUERY` gets mocked
+
+### 65 Testing Order Components
+
+```js
+it("creates an order ontoken", async () => {
+  const createOrderMock = jest.fn().mockResolvedValue({
+    data: { createOrder: { id: "xyz789" } }
+  });
+  const wrapper = mount(
+    <MockedProvider mocks={mocks}>
+      <TakeMyMoney />
+    </MockedProvider>
+  );
+  const component = wrapper.find("TakeMyMoney").instance();
+  // manually call that onToken method
+  component.onToken({ id: "abc123" }, createOrderMock);
+  expect(createOrderMock).toHaveBeenCalled();
+  expect(createOrderMock).toHaveBeenCalledWith({
+    variables: { token: "abc123" }
+  });
+});
+```
+
++ Never invoking Stripe, instead mocking the `res` value Stripe would provide by manually passing in `{ id: "abc123" }`
+  + This is passed into the __instance__ `wrapper.find("TakeMyMoney").instance()` 
+  + Aim is to keep tests as self-contained as possible 
+
+```js
+const createOrderMock = jest.fn().mockResolvedValue({
+      data: { createOrder: { id: "xyz789" } }
+    });
+```
+
++ `mockResolvedValue` from Jest allows us to simulate the function execution and faux return a value
+
+
+```js
+class TakeMyMoney extends React.Component {
+  onToken = async (res, createOrder) => {
+    NProgress.start();
+    // manually call the mutation once we have the stripe token
+    const order = await createOrder({
+      variables: {
+        token: res.id
+      }
+    }).catch(err => {
+      alert(err.message);
+    });
+    Router.push({
+      pathname: "/order",
+      query: { id: order.data.createOrder.id }
+    });
+  };
+  render() {
+    return (
+      <User>
+        {({ data: { me }, loading }) => {
+          if (loading) return null;
+          return (
+            <Mutation
+              mutation={CREATE_ORDER_MUTATION}
+              refetchQueries={[{ query: CURRENT_USER_QUERY }]}
+            >
+              {createOrder => (
+                <StripeCheckout
+                  ...
+                  token={res => this.onToken(res, createOrder)}
+                >
+                  {this.props.children}
+                </StripeCheckout>
+              )}
+```
+
+### 66 Deploy Prisma Server to Heroku
+
+- Had to adjust a few parts of the `datamodel.graphql` and redeploy to get the generated Prisma schema
+  
+  https://github.com/tyreer/advanced-react-wes-bos-course/commit/f4c4d93e803d6c705378f821ff4e77793dd63e7f
+
+### 67 Deploying Yoga Server to Heroku or Now
+
+- `Now` is only version 1.x, `Now 2.0` from Nov. 2018
+- https://www.prisma.io/tutorials/deploy-a-graphql-server-with-zeit-now-cs04
