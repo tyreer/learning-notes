@@ -4394,3 +4394,57 @@ class TakeMyMoney extends React.Component {
 
 - `Now` is only version 1.x, `Now 2.0` from Nov. 2018
 - https://www.prisma.io/tutorials/deploy-a-graphql-server-with-zeit-now-cs04
+
+__Heroku__:
+
++ Ended up running `git subtree push --prefix sick-fits/backend heroku-backend master`
++ Interesting to push just a subdirectory of the git repo using __subtree__
+
++ Because no .ENV file pushed up to Heroku, need to mirror all ENV values in the Heroku app settings
+
++ Removed these commented out bits from `prisma.yml`:
+  - endpoint: ${env.PRISMA_ENDPOINT} (hardcoded this)
+  - secret: ${env.PRISMA_SECRET} (removed this)
+
+### 68 Deploying Frontend to Heroku and Now
+
+__Heroku__: 
+
+```json
+"scripts": {
+  ...
+  "start": "next start -p $PORT",
+  "heroku-postbuild": "next build"
+}
+```
+
+`https://sickfits-next-prod-tyreer.herokuapp.com`
+
++ Need Heroku to have the Next build artifacts, but don't want to commit the `.next/` folder to repo 
++ `-p` flag also needed for start script 
++ `git subtree push --prefix sick-fits/frontend heroku-frontend master`
+
+__Now__:
+
++ `npx now` command from frontend folder
++ Change the `FRONTEND_URL` in the Heroku variables to the Next url and __Restart all dynos__
+
++ `"start": "next start",`
+  + Can remove the `-p $PORT`
+
++ `https://frontend.tyreer.now.sh`
+
+### Leaving notes
+
++ Two frontend deployments, one on Heroku and one on Next
++ Frontend seems to works locally despite the changes made during the deployment phase
++ Local FE will update the production Prisma DB since that's where it's pointing
++ Tests all pass
+
++ I don't think there's an `Account` page but there is a nav item, which doesn't seem to trigger any 404
++ Along those lines, hasn't been user tested much so probably errors, but not the highest priority to trace those down. Not a bad exercise though.
+
+__Wondering__:
+
++ Could I use env.PRISMA_ENDPOINT now that I've got those values in the server environment?
++ Will the missing secret declaration be an issue?
