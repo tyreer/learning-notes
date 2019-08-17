@@ -39,6 +39,15 @@ grid-auto-columns: 100px 20px;
 
 + Default value is _row_, but _column_ allows horizontal tracks to be the implicit result
 
+### 7 Sizing tracks in CSS Grid
+
++ Best to avoid trying to add up to 100% when defining column and row templates
+  + Overflow issue occurs if you have `grid-template-columns: 50% 50%` + `grid-gap: 20px`
+  + Will use 100% of space for columns and the gap will push beyond the 100% bounds = horizontal scroll/overflow
+
++ Better to use `fr` fractional unit to occupy remaining free space
+  + This calculation is done _after_ the gap is accounted for
+
 ### 12 auto-fit and auto-fill
 
 ```css
