@@ -103,9 +103,99 @@ console.log(uniqueSerial2) // COOL70
 
 - `mySerialNumberGenerator` is simply a collection of privileged functions capable of specific powers to use of modify the secret state (42)
 
+__Memoization__
+
+- "Functions can use objects to remember the results of previous operations, making it possible to avoid unnecessary work." (44)
+
+## Ch. 5 Inheritance
+
+- In `classical languages` like Java, objects are instances of classes
+  - JavaScript is a `prototypal language`, so objects inherit directly from other objects
+
+__Pseudoclassical__
+
+- Serious design error in JS is using a constructor function without `new`
+ - Without `new`, `this` in the constructor function will be bound to the global object = very bad
+
+__Functional inheritance pattern__
+
+```js
+const mammal = function (spec) {
+    var that = {};
+
+    that.get_name = function () {
+        return spec.name;
+    };
+
+    that.says = function () {
+        return spec.saying || ''
+    };
+
+    return that;
+};
+
+const cat = function (spec) {
+    spec.saying = spec.saying || 'meow';
+    const that = mammal(spec);
+
+    that.get_name = function () {
+        return that.says() + ' ' + spec.name + ' ' + that.says();
+    };
+
+    return that;
+}
+
+const myCat = cat({name: 'Pumpkin'})
+const myCatDog = cat({name: 'Pumpkin', saying: 'ruff'})
+
+console.log(myCat.get_name()) //meow Pumpkin meow
+console.log(myCatDog.get_name()) // ruff Pumpkin ruff
+```
+
+- __Functional pattern__ is flexible, requires less effort than _pseudoclassical_ (using `new`), and gives better encapsulation and information hiding. (55)
+- If all of the state of an object is private, then the object is tamper-proof
+- Object in the functional style above, if all methods make no use of `this` or `that`, then the object is _durable_
+  - Durable object = collection of functions that act as capabilities and cannot be compromised
+
+## Ch. 6 Arrays
+
+- " An array is a linear allocation of memory in which elements are accessed by integers that are used to compute offsets. Arrays can ve very fast data structures. Unfortunately, JavaScript does not have anything like this kind of array." (58)
+ - Instead, arrays in JS are objects with array-like characteristics
+
+- In most languages, array elements need to be of same type, but JS allows mixture of values
+
+- When using __splice()__, every property after the deleted property must be removed and reinserted with a new key, so large arrays might take time.
+  - But I typically try to avoid mutating an array anyway and prefer __slice()__ 
+
+- Rule to decide between array or object: property names === small sequential integers ? array : object k(61)
+
+__Dimensions__
+
+- JS only allows arrays of one dimension, but allows arrays of arrays (like most C languages)
+
+```js
+const matrix = [
+    [0,1,2],
+    [3,4,5]
+];
+
+matrix[1][2] //5
+```
 
 ## Ch. 7 Regular Expressions
 
+- Regular expressions usually have a significant performance advantage over equivalent string operations in JS (65)
+
+- Sloppy regular expressions are a popular source of security exploits. Easier to write sloppy regex than rigorous (68)
+
+- Try to keep regular expressions simple.
+ - Complicated RegEx are likely to have portability problems between JS language processor (not sure if true still today?)
+ - Nested RegEx can have horrible performance
+
+- `(?: ___ )?` = optional noncapturing group. Usually better to use than the less-ugly capturing groups because capturing has a performance penalty (70)
+
+- Prefer `regular expression literals` (`/xyz/g`) to the `RegExp() constructor`
+)
 
 ### parse_url example
 
