@@ -244,6 +244,32 @@ Router.onRouteChangeError = () => {
   + Think the `getInitialProps` function is helping
 
 
+### 10 - An Intro GraphQL
+
++ GraphQL does not have filtering or sorting
+  + Despite what the `Query Language` of QL might lead you to expect
+
++ GraphQL is just a standard for requesting the specific data you want
++ Server then implements `resolvers` that provide search, filtering, sorting and such
++ MySQL or MongoDB come in once the server executes the resolver
+  + GraphQL is not replacing those databases, but allowing them to be queried nicely
+  + Prisma is a GraphQL server that interfaces with a database
+  + Prisma "sits on top" of the database and provides a full CRUD API
+
+```graphql
+query {
+  items(where: {
+    title_contains: "belt"
+  }) {
+    title
+    description
+  }
+}
+```
+
++ In this example, the `where:` block is not part of GraphQL, but __Prisma__
+  + `title_contains` is a search utility that Prisma provides
+
 ### 11 - Getting Setup with Prisma
 
 Initializing Prisma creates two files:
