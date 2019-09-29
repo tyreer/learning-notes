@@ -194,8 +194,77 @@ matrix[1][2] //5
 
 - `(?: ___ )?` = optional noncapturing group. Usually better to use than the less-ugly capturing groups because capturing has a performance penalty (70)
 
-- Prefer `regular expression literals` (`/xyz/g`) to the `RegExp() constructor`
-)
+- Prefer `regular expression literals` (`/xyz/g`) to the `RegExp("xyz/g", 'g') constructor`
+
+- __regexp choice__ contains one or more __regexp sequences__, which are separated by `|`
+  - Will match if any sequence matches. Attempts in order.
+
+```js
+"into".match(/in|int/);
+// matches on in, not int
+```
+
+- __regexp sequence__ = 1 or more __regexp factors__ + optional __regexp quantifier__
+
+- __regexp factors__ = character, parenthesized group, character class, or escape sequence
+ - All characters are literal except control and special characters:
+ - `\ / [ ] ( ) { } ? + * | . ^ $` 
+ - These must be escaped with `\` to be interpreted literally
+ - Unescaped `.` matches any character except line-ending
+ - Unescaped `^` matches beginning of text when `lastIndex` property is 0
+ - Unescaped `$` matches end of text
+
+- __Regexp escape__
+ - All have special meaning: `\d`, `\D`, `\s`, `\S` 
+
+- Regular expressions have poor i11n support
+
+- `\1` = text captured by group 1, so it can be matched again
+
+```js
+const doubleWords = /([A-Za-z\u00C0-\u1FFF\u2800-\uFFFD]+)\s+\1/gi;
+
+const testString = 'bark bark tyyyt sdfdf dfs';
+
+console.log(testString.match(doubleWords)) //[ 'bark bark', 'df df' ]
+console.log([...testString.matchAll(doubleWords)]) // Newer method, more info in return
+```
+
+- `( ___ )` = capturing group
+- `[A-Za-z\u00C0-\u1FFF\u2800-\uFFFD]+` = A word, which is one or more letters
+- `\s` = Followed by white space
+- `\1` = Followed by the same word
+- `g` = global flag, so match more than one time
+- `i` = insensitive flag, so ignores case
+
+- `\b` is often used for word-boundaries, but its reliance on `\w`  means English only
+
+```js
+const letterClass = /[A-Za-z\u00C0-\u1FFF\u2800-\uFFFD]/
+```
+- All unicode letters and some extra
+
+__Regexp group__
+
+- `( ___ )` = __Capturing group__: value that matches this group is captured and added to results array
+- `(?: ___ )`__Noncapturing group__ = value can match, but is _not_ captured or added to results array. Slightly faster performance
+- `(?= ___ )` + `(?! ___ )` = other groups that are "not a good part"
+
+__Regexp class__
+
+- `[aeiou]`
+- Convenient way to specify one or a set of characters
+- Complementing of the class = `[^ ___ ]`
+ - If first character is `^` = _excludes specified characters  
+ - `[^aeiou]`
+- Can use ranges with `-`: `[!-/]`
+
+__Regexp quantifier__
+
+- Regexp factors can have a quantifier suffix
+- `/www/` = `/w{3}/`
+- `{3-5}` = matches 3, 4, or 5 times
+- `{3,}` = matches 3 or more times 
 
 ### parse_url example
 
@@ -206,8 +275,6 @@ const url = "http://www.ora.com:80/goodparts?q#fragment";
 
 const result = parse_url.exec(url);
 ```
-
-__Capturing group__ = value is added to results array
 
 - `/^` + `$/`
   - Opening and closing anchors: 
@@ -283,3 +350,53 @@ parse_number.test('98.35533E')  // false
     - `e` = letter _e_
     - `[+\-]?` = optional negative or positive symbol for the exponent 
     - `\d+` = any digit one or more times
+
+## Ch. 8 Methods
+
+- `array.shift()` is much slower than `array.pop()`
+ - Assume because all the items in array need to be moved to next index values
+
+ - `regexp.exec(string)` most powerful and slowest method for regular expressions
+  - If it matches it returns an array with the captured groups
+
+ - `regexp.test(string)` simplest and fastest. If matches, returns `true`
+
+ - `string.match(regexp)`
+
+ - `string.replace(searchValue, replaceValue)`
+  - `searchValue: String | RegExp`
+  - If string, will only replace first match
+  - If regular expression with `/g` flag, will replace all matches
+  - `replaceValue : String | Function`
+  - If string, `$` has special meaning:
+
+```js
+const oldAreaCode = /\((\d{3})\)/g;
+const p = '(555)555-5555'.replace(oldAreaCode, '$1-')
+
+console.log(p) // 555-555-5555
+```
+- `\( ___ \)` = match content surrounded by literal parenthesis
+- `(\d{3})` = capture group of any three digits 
+- `$1-` = text in first capture group followed by a literal hyphen
+
+- `string.split(separator, limit)`
+
+```js
+const text = 'last,  first   , middle';
+const separatorRegEx = /\s*,\s*/;
+const result = text.split(separatorRegEx);
+
+console.log(result) //['last', 'first', 'middle']
+```
+
+- `\s` = white space
+
+- No reason to use to use `string.substring(start, end)`. Use `slice` instead
+  
+
+## Ch. 10 Beautiful Features
+
+- Feature-driven product design often doesn't properly account for the cost of features
+ - Potential negative UX by confusing users
+ - Specification, design, development, testing and reliability costs
