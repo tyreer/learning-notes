@@ -12,6 +12,8 @@ https://www.typescriptlang.org/docs/handbook/basic-types.html#null-and-undefined
 
 ## (React 'enthusiastic hello' tutorial)[https://github.com/Microsoft/TypeScript-Handbook/blob/master/pages/tutorials/React.md]
 
+(Deprecated sample app code)[https://github.com/microsoft/TypeScript-React-Starter]
+
 > In general, it'd be a good idea to write a few tests for onIncrement and onDecrement being triggered when their respective buttons are clicked. Give it a shot to get the hang of writing tests for your components.
 
 > create-react-app comes with a lot of great stuff. Much of it is documented in the default README.md that was generated for our project, so give that a quick read.
@@ -26,3 +28,9 @@ https://www.typescriptlang.org/docs/handbook/basic-types.html#null-and-undefined
 
  - Might be worth stepping through
   - CRA sets this up for you, but worth understanding how Webpack can be configured in case we need to eject
+
+
+## Functions
+
+### Overloads
+    https://www.typescriptlang.org/docs/handbook/functions.html#overloads
