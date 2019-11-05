@@ -91,9 +91,29 @@ const CountStateContext = React.createContext()
 const CountDispatchContext = React.createContext()
 ```
 
-> "CountDispatchContext “the simplest way to avoid problems with context (especially when you start calling dispatch in effects) is to split up the state and dispatch in context.”
+> "CountDispatchContext: “the simplest way to avoid problems with context (especially when you start calling dispatch in effects) is to split up the state and dispatch in context.”
+
+- Key for me is that the `useReducer` hook allows you to destructure both the `action` and `dispatch` values:
+
+```js
+const [state, dispatch] = React.useReducer(countReducer, {count: 0})
+```
+
+- These then get passed into their respective context providers:
+
+```js
+return (
+  <CountStateContext.Provider value={state}>
+    <CountDispatchContext.Provider value={dispatch}>
+      {children}
+    </CountDispatchContext.Provider>
+  </CountStateContext.Provider>
+)
+```
 
 - Really [nice TypeScript model](https://codesandbox.io/s/bitter-night-i5mhj) of how the a custom hook API can be made that's easy to consume by components with need to the context
+
+
 
 ```tsx
 // src/count-context.tsx
@@ -169,10 +189,9 @@ function App() {
 - `CountDisplay` and `Counter` have very easy custom hook API to access context
 - `CountProvider` is doing the component composition
 
-
 > “At this point, you reduxers are yelling: "Hey, where are the action creators?!" If you want to implement action creators that is fine by me, but I never liked action creators. I have always felt like they were an unnecessary abstraction. Also, if you are using TypeScript or Flow and have your actions well typed, then you should not need them. You can get autocomplete and inline type errors!”
 
-- He's saying typing actions that are provideed to `React.useReducer` provides same benefits of Redux action creators
+- He's saying typing actions that are provided to `React.useReducer` provides same benefits of Redux action creators
 
 ```js
 type Action = {type: 'increment'} | {type: 'decrement'}
