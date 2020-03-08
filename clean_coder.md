@@ -278,3 +278,189 @@ __Key lessons:__
 
 Immediately useful to consider the language of commitment 
 - I'll ___ by _____
+
+
+## Ch. 4 Coding
+
+### Preparedness
+
+Breakdown of why coding is an "intellectually challenging and exhausting activity":
+
+Your code must: 
+1. work and solution must remain "consistent within the language, platform, current architecture, and all the warts of the current system"
+1. solve the customer's problem. In full awareness that the customer's requirements don't always solve their problem. Responsibility to negotiate with customer to ensure true needs are met
+1. not increase the "rigidity, fragility, or opacity" of the existing system. (_solid_ engineering principles) 
+1. be readable by other programmers. Hard / might be "most difficult thing a programmer can master". 
+
+- Readability as a guide to code reviews 
+- If you cannot focus or concentrate sufficiently, your code will be wrong and will need to be redone. "Working while distracted creates waste." (p.59)
+- If tired or distracted, find a way to settle your mind rather than coding
+
+#### 3AM Code
+ 
+- 3AM code where his solution was _the only thing_ he could think of
+  - Capacity to creatively imagine several potential solutions and begin pursuing the best one, while also maintaining an awareness that you can change course and pursue an alternative
+  - Easy for me to consider this in writing, where different sentence structures or word choices or just ideas are accessible
+- That one badly designed but at-the-time sufficient solution introduced a recurring need to work around it in the months that followed
+  - "It caused all kinds of strange timing errors and odd feedback loops"
+  - Never seemed to have time to rewrite the problematic solution, but always seemed to have time to write workaround after workaround
+- Professionalism = balancing your life (rest, effort, all-the-everything) so you can put in 8 good hours of work a day (p.60)
+
+#### Worry Code
+
+- Calling out the ways that we can stare at the code in front of us, but mentally be a million miles away trying to resolve a disturbed or upset head state
+- Take some time (maybe an hour) to resolve the worry. Then turn back to coding
+- Mentions somewhere (p.65) the way that being fearful can also block your coding brain. I feel that when I'm just aware enough that I'm working to an impossible deadline to achieve and yet quietly in denial, resisting the idea of pausing to reassess what a realistic outcome would be
+
+### Flow zone
+
+- While developers often say they want to get into __the zone__, can see it really as a "mild meditative state in which certain rational faculties are diminished in favor of a sense of speed."
+- Being in the zone often means moving quickly, which feels god
+  - In fact, might just be disabling the capacity to critically evaluate if the solutions you intuitively lands on are the right ones or if alternatives might be better
+  - May write code faster, but will need to revisit it more often
+- Big benefit of pair programming is that it's impossible to slip into the zone
+- Caveat that when practicing with something like katas, the zone might be chill
+
+#### Interruptions
+
+- Be wary of the ways we can be rude in responding to interruptions because we resent being pulled out of the zone (or an attempt to get into the zone)
+- Pairing is helpful for interruptions because your partner can help hold the context of the work. 
+  - Help you "reconstruct the mental context"
+  - I always feel like I'm juggling and drop the balls during an interruption, so maybe can think of passing the balls to your partner
+- TDD also helpful because it too can hold the mental context
+- "polite willingness to help" is really the professional response (p.64)
+  - Of course, also a need to choose a good time, which he mentions later on with the idea of blocking out individual time and open-to-help time (p.74) 
+
+### Writer's Block
+
+- Not getting enough sleep or worry, fear, and depression can cause writer's block
+- Uncanny how well it works to find a partner to pair with to overcome writer's block
+
+#### Creative Input
+
+- Hours spent away from usual problems "being actively stimulated by challenging and creative ideas, results in an almost irresistible pressure to create something myself"
+
+### Debugging Time 
+
+- We don't think of debugging time as coding time, but it's just as expensive
+- Analogy of surgeon reopening a patient or a lawyer retrying a case as being unprofessional
+  - As a developer, creating bugs that cause a need to return to code to resolve a problem is unprofessional (p.69)
+
+### Being Late
+
+- When you know you've fallen behind a time target, telling everyone you'll be on time until the very end = worst
+- Instead, _regularly_ measure progress against end goal
+  - and come up with 3 fact-based end dates" best, nominal and worst case
+- "Do not incorporate hope into your estimates!" (p.71)
+
+#### Hope
+
+- In the common case that you _might_ miss a deadline
+- e.g. You've got an event in 10 days and your estimates are best 8, nominal 12, worst 20 days
+  - "_Do not hope you can get it done in 10 days!_"
+  - Your responsibility to make sure the team and stakeholders know that you will not make the deadline
+  - "Don't let anyone else have hope." LOL
+- Hope is the project killer, destroyer of schedules and ruiner of reputations 
+
+#### Rushing 
+
+- Hold to your estimates and don't agree to rush
+- "original estimates are more accurate than any you'll make while your boss is confronting you"
+- If asked to do something faster, say you've already considered the workload and the only way to do things faster is to reduce scope
+- "_Do not be tempted to rush_"
+- Do not agree to "try" to make a deadline
+  - You are then guilty of giving team and stakeholders false hope 
+  - Only avoid facing the issue of making a tough decision and make that conversation more difficult later 
+- "There is not way to rush"
+  - Cannot solve problems faster, will only slow yourself down and other along with you by making a mess
+- "you must answer your boss, your team, and your stakeholders by depriving them of hope."
+
+#### Overtime
+
+- Overtime can work in some situations
+- It will certainly fail if it goes on for more that 2–3 weeks
+- Agree only if you can personally afford it, it's short term and there's a fall-back plan
+- The person asking you to work overtime _must have a fall-back plan_ in case the overtime fails
+  - No fall-back plan = do not agree to work overtime
+
+#### False delivery
+
+- Saying you're done when you know you're not
+  - Drives me crazy when people do this
+  - I'm sure I've done it too. Feels like this is the key place done criteria comes up
+- "far more insidious case is when we manage to rationalize a new definition of done" (p.73)
+- Then other people follow suit and it becomes a lazy, destructive norm. 
+- Managers hear everything is going fine there's a time delay before the short cut blows up an expensive timeline is disrupted and reputations are knocked 
+
+#### Define "done"
+
+- Have "business analysts and testers create automated acceptance tests"
+
+### Help
+
+- Challenging to carefully partition code solutions into small understandable units that have as little to do with each other as possible
+- "No matter how skilled you are, you will certainly benefit from another programmer's thoughts and ideas"
+  - Nice to think of in the context of PR reviews for more experienced devs 
+
+#### Helping others
+
+- Violation of pro obligation to hide away in a room in order to avoid any interruptions / queries
+- As a professional, honour bound to offer help when it is needed
+- Amazing how much of these insights seem evident once they're presented this way, but I've never once had anyone say them to me
+  - Apart from "Be kind"
+- "You should be conscious of the status of your teammates"
+  - If someone seems in trouble offer help. 
+  - Not that you're smarter than your teammates, but a fresh perspective can be a "profound catalyst for solving problems"
+- When helping, plan to spend some time, probably and hour. 
+  - Don't appear to be rushed
+  - "Resign yourself to the task and give it a solid effort"
+
+#### Being helped
+
+- "Do not protect your turf"
+- Accept an offer of help
+  - If nothing much comes out of it after 30 minutes, politely end the pairing  
+- Learn to ask for help
+  - "It is unprofessional to remain stuck when help is easily accessible" (p.75)
+- Notion that programmers may not be collaborative by instinct, so need discipline to foster collaboration 
+
+
+### Personal Takeaways
+
+- Hope is the project killer, destroyer of schedules and ruiner of reputations (p.71)
+- I must deprive others of hope (if our original estimates support it)
+- Saying you'll "try" and rush to meet a deadline makes you guilty of providing false hope
+- When offering help, plan to sit with a problem for an hour
+- Be wary of "the zone" since you may simply be embracing a head space in which you're incapable of holding multiple potential ways of solving a problem. THe solutions might be those that are the most intuitively evident rather than the most appropriate.
+- Even the most skilled developer benefits from a second perspective
+  - Easy win for current project to break down large components into smaller, more understandable units
+
+
+## Ch. 5 Test Driven Development
+
+- Three laws of TDD lock you into a quick cycle (30 seconds) of writing a test, then needing to write the production code to make it pass
+
+1. No production code until written first failing test
+1. Not allowed to write more unit test than is sufficient to fail
+1. Not allowed to write more production code than is sufficient to pass the failing test
+
+- Defect injection rates much lower than w/o TDD
+  - This has a huge effect on a project and should not be ignored
+
+#### Documentation
+
+- Each unit test is an example written in code that describes how a system should work
+- Unit tests are the best kind of low-level documentation
+- "unambiguous, accurate and written in a language that the audience understands"  
+
+#### Design
+
+- Writing tests first forces you to think of good design
+- Prevents coupling "functions together into an untestable mess"
+
+
+### Discussion Questions
+
+- Have you had a time when you've needed to work overtime and needed to negotiate a fall-back plan? (p.72)
+
+- Drives me crazy when there's a sense of false delivery. How do you navigate defining done?
