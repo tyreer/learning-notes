@@ -196,3 +196,41 @@ function App() {
 ```js
 type Action = {type: 'increment'} | {type: 'decrement'}
 ```
+
+## Apollo 
+
+- Promise with Apollo Client is that you can access and update local and remote data with one tool.
+- Somewhat interesting to look at a Code Sandbox like [this one](https://codesandbox.io/s/eloquent-johnson-fym98) and realize they're using the Apollo client solely to manage local state, w/o any remote data access. 
+- Costs: Apollo client set up + GraphQL learning curve.
+  - Need a team/org buy-in on GraphQL as nicely articulated in the Circle Engineering post below:
+
+> "On the Circle 🛠 team, we know that our future stack includes GraphQL. In fact, in the ideal scenario, we would have a company-wide data graph at some point and access and mutate data consistently through GraphQL. However, in the short-term, we were simply looking for a low-friction way to introduce GraphQL to a piece of the stack and allow developers to wrap their heads around this technology in a low-stress way."
+
+- Once you have that commitment to using GraphQL and accepting related learning curves, Apollo is an easy sell:
+
+> "Our teams report that Apollo has become the library of choice when building a React application that uses GraphQL to access data from a back-end service. Although the Apollo project also provides a server framework and a GraphQL gateway, the Apollo client gets our attention because it simplifies the problem of binding UI components to data served by any GraphQL backend. Put simply, this means less code needs to be written than using REST backends and redux."
+ 
+ - [ThoughtWorks Technology Radar, April 2019](https://www.thoughtworks.com/radar/languages-and-frameworks/apollo)
+
+
+### Local State Management Docs
+
+- https://www.apollographql.com/docs/react/data/local-state/
+- https://www.apollographql.com/docs/tutorial/local-state/
+
+Apollo cache = Redux store
+
+- Both are just local application state maintained by the JS running the app in browsers
+- Both need some technique to persist their data from the session
+
+> "When you're using Apollo Client to work with local state, your Apollo cache becomes the single source of truth for all of your local and remote data."
+
+> "We recommend managing local state in the Apollo cache instead of bringing in another state management library like Redux so the Apollo cache can be a single source of truth."
+
+### Circle Engineering Blog Post
+
+https://engineering.circle.com/https-medium-com-mattdionis-move-over-redux-apollo-client-as-a-state-management-solution-1f9325f96cdd
+
+" in the short-term, we were simply looking for a low-friction way to introduce GraphQL to a piece of the stack and allow developers to wrap their heads around this technology in a low-stress way. GraphQL as a client-side state management solution using libraries such as apollo-client felt like the perfect way to get started."
+
+- https://codesandbox.io/s/eloquent-johnson-fym98
