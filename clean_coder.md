@@ -464,3 +464,110 @@ Your code must:
 - Have you had a time when you've needed to work overtime and needed to negotiate a fall-back plan? (p.72)
 
 - Drives me crazy when there's a sense of false delivery. How do you navigate defining done?
+
+## Ch. 6 Practicing
+
+- Musicians practice scales so they can be free to perform 
+- This chapter is about a similar premise in software where a developer practices a routine so that other thinking processes are more clearly accessible while coding  
+
+### Kata
+
+- "a precise set of choreographed keystroke and mouse movements that simulates the solving of some programming problem." (p.90)
+- Already know the solution, so not really problem solving
+  - Instead, "practicing the movements and decisions involved in solving the problem"
+  - Interesting to think of practicing _decisions_ so they become more automatic
+  - Completely different to what I thought of, where I approach a Code War kata as a brief problem solving exercise
+- https://katas.softwarecraftsmanship.org
+- www.butunclebob.com/ArticleS.UncleBob.TheBowlingGameKata
+
+### Broadening Your Experience
+
+- w/o a "broadening influence" can become unprepared for changes that sweep the industry
+- Open source as "pro-bono" work like a other professionals might take on
+- Practice time is not paid for by employer 
+  - Liberty there is that you can pick up whatever language you want and keep your "polyglot skills sharp"
+  - Good encouragement to maintain that suppleness and humility of mind that learners need
+
+### Ch. 7 Acceptance Testing
+
+#### Communicating Requirements 
+
+- Premature precision = desire for both business and programers to know what they'll get or exactly what they'll build at the outset
+
+#### Uncertainty principle 
+
+- Only once a business sees a requirement actually running do they get a better idea of what they really want (p.97)
+- "Observer effect", as in, demoing a feature gives more information than business had before, and the new information impacts how they ses the whole system
+
+#### Late ambiguity
+
+- "An ambiguity in a requirements document represents an argument amongst the stakeholders."
+  - Idea that a disagreement is often papered over by language
+- Example of a misunderstanding where two parties didn't work hard enough to ensure they'd fully understood one another
+- Responsibility of professional developers (and stakeholders) to make sure ambiguity is removed from requirements
+  - It's a hard thing to do, and the only way he knows how to do it is through...
+
+#### Acceptance Tests
+
+- Term itself is overused and commonly not clearly understood
+- Here test written by stakeholders and programmers in collaboration to define when a requirement is done
+- Nod to the fact that devs often say something is "done" when they really just no longer want to work on the parts required to fully complete it
+  - But a professional developer only has a single definition of done: all code written, tests pass, QA and stakeholders accepted
+- Pros drive their definition of a requirement all the way to __automated acceptance tests__
+ - Easy to say, but the actual work of ensuring stakeholders and QA agree that the tests are a "complete specification of done" is __not simple__ and involves pushing beyond false understandings / finishing points 
+
+ #### Communication
+
+ - Acceptance tests help to demand a standard of detailed communication
+ - Developers, stakeholders and testers all understand what the plan for the system behavior is
+   - Considering the the general desire to hand wave away complexity during discussions, this is a challenging task. It looks deceptively simple in writing, but the actual work of clearly specifying is rigorous 
+   - "Professional developers make it their responsibility" to work with all parties to know what is about to  be built
+
+#### Automation
+
+- Cost of automating acceptance tests is not very much compared to the cost of paying people to perform manual tests 
+  - "makes no economic sense to write scripts for humans to execute" (p104)
+- Responsibility of professional developers to ensure acceptance tests are automated
+  - As in, if you're allowing others to manually test, you're being _irresponsible_
+
+#### Extra work
+
+- Common for writing acceptance tests to be seen as "extra work"
+- But considering you'd have to specify a manual testing script anyway, it's not _extra_
+  - "Writing these tests is simply the work of specifying the system"
+- Frame them as massive time and money savers
+  - Will prevent you from implementing the wrong system and let you know when you are done.
+
+#### Who writes acceptance tests and when
+
+- Ideally, stakeholders and QA would write these tests and developers review for consistency
+- IRL, its delegated to business analysts, QA or even developers
+  - If devs need to write these tests, make sure another dev is the one implementing the tested feature
+- Typically: BA's write "happy path" because those tests describe the features providing business value
+- QA writes unhappy path tests: boundary conditions, corner cases, exceptions
+- Principle of "late precision" = acceptance tests should be written as late as possible
+  - A few days before feature is implemented 
+- In a sprint, first tests written for day one of the sprint/implementation. Aiming to have all tests complete by midpoint
+  - If not complete by midpoint, other devs need to help out. If that happens frequently, need to bring on BA/QAs
+
+#### The Developer's Role
+
+- Developer should start implementation work with a set of tests that all fail when they run
+- The developer's job is to:
+  - connect the acceptance test to the system/application 
+  - make the tests pass 
+- Be cautious to avoid the __passive-aggressive option__ of writing code to pass a test you think is incorrectly written
+- As a professional, it's your job to help the team create the best software they can
+  - This means looking out for errors and putting in the work to correct them
+
+#### Acceptance Tests and Unit Tests
+
+- Unit tests = by programmers for programmers
+  - Describe lowest level structure and behavior of the code
+- Acceptance tests = by the business for the business
+  - Formal requirements doc that specifies how the system should behave from the businesses POV
+  - Audience is business and programmers
+- Interesting framing that both unit and acceptance tests are _documents first_ and tests second.
+  - Primarily, they "formally document the design, structure, and behavior of the system"
+- Specification is their true purpose
+  - Verifying everything works is hugely useful too though
