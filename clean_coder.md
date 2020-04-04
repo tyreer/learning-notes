@@ -488,7 +488,7 @@ Your code must:
   - Liberty there is that you can pick up whatever language you want and keep your "polyglot skills sharp"
   - Good encouragement to maintain that suppleness and humility of mind that learners need
 
-### Ch. 7 Acceptance Testing
+## Ch. 7 Acceptance Testing
 
 #### Communicating Requirements 
 
@@ -507,7 +507,7 @@ Your code must:
 - Responsibility of professional developers (and stakeholders) to make sure ambiguity is removed from requirements
   - It's a hard thing to do, and the only way he knows how to do it is through...
 
-#### Acceptance Tests
+### Acceptance Tests
 
 - Term itself is overused and commonly not clearly understood
 - Here test written by stakeholders and programmers in collaboration to define when a requirement is done
@@ -560,14 +560,40 @@ Your code must:
 - As a professional, it's your job to help the team create the best software they can
   - This means looking out for errors and putting in the work to correct them
 
-#### Acceptance Tests and Unit Tests
+### Acceptance Tests and Unit Tests
 
 - Unit tests = by programmers for programmers
   - Describe lowest level structure and behavior of the code
 - Acceptance tests = by the business for the business
   - Formal requirements doc that specifies how the system should behave from the businesses POV
   - Audience is business and programmers
-- Interesting framing that both unit and acceptance tests are _documents first_ and tests second.
+- Interesting framing that both unit and acceptance tests are _documents first_ and tests second
   - Primarily, they "formally document the design, structure, and behavior of the system"
 - Specification is their true purpose
   - Verifying everything works is hugely useful too though
+
+#### GUIs and Other Complications
+
+- __Single Responsibility Principle__: Separate those things that change for different reasons. Group things that change for the same reasons.
+- Underlying capabilities and abstractions of a GUI often don't change that often
+- Tests need to target unique ID since UI tends to change somewhat frequently
+- "Write your business rule tests to go through an API just below the GUI" (p. 110)
+  - Separate a GUI from business rules. Is this similar to what we have when a client can use our product as an "API user", maybe making their own GUI?
+- Tests of the GUI itself should be kept to a minimum because they are fragile
+- "When every GUI change breaks a thousand tests, you are either going to start throwing the tests away or you are going to stop changing the GUI." 
+  - Interesting to think of tests as creating the perverse effect of discouraging change to a GUI. So often we think of tests enabling devs to refactor with confidence, but you can see how the extra effort of needing to update a test could discourage being able to easily change a UI.
+
+#### Continuous Integration
+
+- All tests should be run several times a day in a CI system triggered by incoming code commits/PRs
+- "Stop the Presses": CI tests should _never_ fail
+  - If they fail, the whole team should stop what they're doing and focus on getting them to pass again
+
+### Acceptance Tests Conclusion
+
+- Communication between stakeholders and developers about the details of an application is __hard__.
+  - "It is too easy for each party to wave their hands and _assume_ that the other party understands" (p.111)
+  - Entirely possible for both to "agree" and walk off with different ideas
+- Only way Uncle Bob knows to eliminate comms errors is to write automated acceptance tests
+- Completely unambiguous and can never get out of sync with the application = perfect requirements document 
+
