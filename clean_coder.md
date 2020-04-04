@@ -636,4 +636,99 @@ Your code must:
 - Manual Exploratory Tests:
   - Not automated or scripted, but when people click around and try to find bugs intuitively and creatively
 
+## Ch. 9 Time Management
 
+### Meetings
+
+- Professionals are aware that they have code to write and schedules to meet. 
+  - Actively resist attending meetings that don't have an immediate and significant benefit
+
+#### Declining
+
+- Don't need to go to every meeting invited to. Indeed, unprofessional to attend too many meetings.
+- Don't accept invites unless meeting is one for which participation is _immediately and significantly necessary to the job you're doing now_
+  - Trade offs if particularly interesting meeting or if it benefits other teams in a key way
+  - Important thing to keep in mind is if you can afford it
+  - Your responsibility is to your projects first, not other teams'
+  - "The person inviting you to a meeting is not responsible for man
+- Important duty of a manager is to keep devs out of meetings 
+  - Good manager will defend decision to decline because they are concerned about your time
+
+#### Leaving
+
+- Meetings don't always go as planned
+  - Bob's rule: "When the meeting gets boring, leave" (p.124)
+- It's your obligation to manage your time well, which might mean finding a way to politely exit
+- __Ask if your presence is still necessary__
+- Remaining in a meeting that is not a good use of your time and to which you can no longer contribute is _unprofessional_
+- Obligation to wisely spend your employer's time and money
+
+#### Have an agenda and a goal
+
+- Before agreeing to go to a meeting, insist that the discussion topics are clear, as are their allocated time, and there's a goal
+
+#### Iteration/sprint planning meetings
+
+- Estimates should already be done for candidate items before the planning meeting
+- Assessment of business value should already be done
+- Real good: acceptance/component tests already written before planning session
+- Idea is to allow candidate items to be quickly discussed and rejected or accepted
+  - No more than 5 minutes on a given item
+- Interesting rule: shouldn't take longer than 5% of sprint/iteration
+  - 1 week sprint = 2 hour meeting 
+
+#### Retro + Demo
+
+- Each retro should have a demo to stakeholders
+- Stakeholders should see a demo of newly working features at the end of each sprint
+  - We did this, or at least attempted, in VRP
+
+#### Arguments/Disagreements
+
+- "Any argument that can't be settled in 5 minutes can't be settled by arguing" (p.126)
+  - Needs evidences to support the resolution of the dispute
+- Technical disagreements can have loads of justifications but still won't be able to forge agreement 
+  - Only way to resolve is through getting data
+- Some will attempt to win by "force of character"—yelling or acting condescending
+  - Won't settle an argument for long. Only data will
+- Some will be passive aggressive and agree only to see something crash and burn
+  - Never do this. "If you agree, then you _must_ engage"
+- How to get data? Agree on a set of criteria and a length time to try one of the alternatives out and then come back and check in on how it went
+
+### Focus-manna
+
+- Programming is a taxing intellectual exercise that will deplete you and require regeneration
+- Focus-manna = know it when you got it because you're able to focus
+  - Is a __decaying resource__: if you don't use it while it's there you'll lose it
+  - It can be eaten up by meetings, when it should be applied to coding 
+- Pros learn to strategically organize their day to make use of the focus-manna
+- Recharging rather than writing code while spent that will almost certainly have to be written again the next day
+  - Take 30 minutes to de-focus
+- "Muscle focus" facilitating greater mental focus 
+
+### Time boxing and tomatoes
+
+- Real benefit is that the 25 minutes allows you to aggressively defend your focus against all interruptions
+- Nice to accumulate over the course of the day as a metric of how well you were able to focus
+
+### Avoidance
+
+-  I really like this phrase __priority inversion__
+  - A lie we tell ourselves because we're unwilling to face what needs to be done
+  - Elevating the priority of a task that really doesn't need to be done _right now_
+
+### Blind alleys
+
+- Making a technical decisions that leads nowhere
+- "The real skill you need is to quickly realize when you are in one, and have the courage to back out." (131)
+- Pros avoid getting so vested in an idea that they can't abandon it and turn around
+
+### Messes
+
+- "Nothing has a more profound or long-lasting negative effect on the productivity of a software team than a mess. Nothing."
+- Progression of a mess is insidious.
+  - Everything is written cleanly, but at some point you realize a design decision doesn't scale in the direction the requirements are progressing
+  - "This is the inflection point! You can still go back and fix the design." It will never be easier than at that moment
+  - If you don't change the design you proceed and in the coming months get into a mess from which you never escape!
+- Pros feat messes far more than blind alleys
+  - They are always on the look out for them and will expend all effort needed to escape as early and quickly as possible
