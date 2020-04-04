@@ -597,3 +597,43 @@ Your code must:
 - Only way Uncle Bob knows to eliminate comms errors is to write automated acceptance tests
 - Completely unambiguous and can never get out of sync with the application = perfect requirements document 
 
+## Ch. 8 Testing Strategies
+
+### QA Should Find Nothing
+
+- Every time QA finds something wrong, the dev team should be dismayed, and ask themselves how it happened and how it can never happen again
+- QA's role is to work with the business to create the automated acceptance tests that because the true spec and requirements doc for the system
+
+### Test Automation Pyramid
+
+- Unit Tests: 
+  - Specify system at the lowest level
+  - Written before the production code the developer is about to write (TDD)
+
+- Component Tests:
+  - One form of acceptance tests related to the business rules a component executes
+  - Passes input data into a component and tests output
+  - All other system components are decoupled via mocking and "test-doubling"
+  - Half the system. Typically happy-path as unhappy-path are covered in unit tests
+  - Written by QA + business with support from devs
+  - Business should be able to read and interpret these tests if not author them
+
+- Integration Tests:
+  - Only for a system with many components. Tests that they all communicate together well
+  - Don't test business rules but instead how well assembly of components works together
+  - "properly connected and can clearly communicate"
+  - Not executed as part of CI because typically longer runtimes
+    - Periodically (nightly, weekly)
+
+- System Tests:
+  - "ultimate integration tests"
+  - Entire system's parts interoperate as planned
+  - Throughput and performance tests here, but not business tests
+  - Written by system architects and tech leads
+  - Only cover 10% of system and not focused on behavior (already covered), only focused on system construction
+
+
+- Manual Exploratory Tests:
+  - Not automated or scripted, but when people click around and try to find bugs intuitively and creatively
+
+
