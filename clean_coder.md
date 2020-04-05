@@ -732,3 +732,54 @@ Your code must:
   - If you don't change the design you proceed and in the coming months get into a mess from which you never escape!
 - Pros feat messes far more than blind alleys
   - They are always on the look out for them and will expend all effort needed to escape as early and quickly as possible
+
+## Ch. 10 Estimation
+
+- Source of nearly all _distrust_ between developers and business people
+
+#### Commitments
+
+- Professionals only make commitments if they are certain they can satisfy them
+  - If not _certain_ then required to decline the commitment 
+  - If you _can_ make a commitment but know it will take long nights and weekend, better be ready to do what it takes before agreeing to the commitment 
+- Others will make plans based on your commitment
+  - If you fail to meet a commitment, cost to them and your reputation is significant
+  - "Missing a commitment is an act of __dishonesty__ only slightly less onerous than an overt lie" (138)
+
+#### An estimate
+
+- A probability distribution rather than a number 
+- __Implied commitment__ - very interesting
+  - Scenario which you could easily imagine: dev gives estimation distribution of 2–3 days in best case scenario, but possibly 5–6 or even more depending on unknowns
+  - Manager tries to get _implied commitment_ by first asking "no more than 4 days" then "can you _try_ to get it done in 6 days"
+  - Revisiting an earlier point: "try" is a loaded term implying a commitment that will force the dev to work long nights or cancel family vacations to meet if he's implicitly commited to it
+  - Professional resists commitment in each instance, instead "communicating the probability distribution as clearly as they can so managers can make appropriate plans"
+
+#### PERT
+
+- Program evaluation and review technique from US Navy
+- _Trivariate estimation_: Optimistic (wildly), nominal (likely), pessimistic (wildly) estimations
+  - Then a bit of math to arrive at a number to work with
+  - Expected duration: (O + N4 + P) / 6 
+  - Standard deviation to account for _uncertainty_: (P - 0)/ 6
+  - For a sequence of tasks, standard deviation is given more weight
+  - "the uncertainty in those tasks compounds in a  way that adds _realism_ to the plan" (144)
+- Just one technique to help avoid setting optimistic expectations
+  - Need to avoid optimistic estimations and build times that take 3–5 times longer than expected
+- Good engineers are __careful to set reasonable expectations__ despite pressure to go fast
+
+### Estimating tasks
+
+- Various modes of estimating with consensus (_wideband delphi_)
+- Simultaneity of displaying estimates is important (don't want people to change estimates based on others')
+- _Affinity estimation_: no talking, put all tasks as cards on board and team members sort them relative to one another 
+  - If any card is moved more than (x) times, then it's set aside to be discussed
+  - Then lines for Fibonacci dividers are drawn (days to complete)
+- Most of the time, we want 3 estimates to provide a _probability distribution_ (can use above techniques to get trivariate)
+- _Law of Large Numbers_: Avoid large tasks. Break them down into smaller parts and estimate those
+
+### Estimation conclusion
+ 
+ - Professionals meet commitments when they make them, and they meet hard numbers
+ - But in most cases, professionals don't make these kinds of commitments
+   - Instead, "they provide probabilistic estimates that describe the expected completion time and the likely variance" (148)
