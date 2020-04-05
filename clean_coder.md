@@ -783,3 +783,42 @@ Your code must:
  - Professionals meet commitments when they make them, and they meet hard numbers
  - But in most cases, professionals don't make these kinds of commitments
    - Instead, "they provide probabilistic estimates that describe the expected completion time and the likely variance" (148)
+
+## Ch. 11 Pressure
+
+- Example of demeanor and how you'd expect a surgeon to conduct themselves under pressure
+  - Point being, swearing and blaming management for unrealistic expectations or just constantly complaining is immature and unprofessional 
+
+### Avoid pressure
+
+- As a pro engineer, your __job is to avoid pressure__
+
+#### Commitments
+
+- One way to avoid pressure is to avoid making commitments you can't meet
+- Business will always want commitments because they want to eliminate risk
+- Out job is to make sure risk is quantified and presented clearly to the business so they can plan accordingly and manage it appropriately
+- Is business makes a commitment for us, then we help find a way to meet that goal
+- But if there's no way to meet those promises, those that made the commitment must ultimately accept responsibility (perhaps easier said than done, but still a guiding principle)
+
+#### Staying Clean
+
+- "do not succumb to the temptation to create a mess in order to move quickly" (152)
+  - "quick and dirty" = oxymoron because dirty always = slow in the long run
+- Avoid pressure by keeping our systems code and design as clean as possible
+ - Not endlessly polishing, more so not tolerating messes
+- Messes will slow us down, cause us to miss dates and break commitments
+- Crisis discipline: follow the techniques you'd use in a crisis all the time
+
+### Handling Pressure
+
+- "Manage your stress" 
+- Not sleeping or sitting and fretting won't help
+- Also, _resist the temptation to rush_ at all costs. It will only drive you deeper into the hole
+- Instead, slow down, plan out the best possible outcome and drive toward that at a steady reasonable pace
+- _Communicate_: let team and superiors know your in trouble and plan to get out of it
+  - Ask for their input
+  - "Avoid creating surprises" (154)
+- Trust your disciplines. Under pressure is not the time to abandon or question them
+- If you see someone who's under pressure, offer to pair with them 
+
