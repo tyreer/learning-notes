@@ -752,9 +752,9 @@ Your code must:
 - __Implied commitment__ - very interesting
   - Scenario which you could easily imagine: dev gives estimation distribution of 2–3 days in best case scenario, but possibly 5–6 or even more depending on unknowns
   - Manager tries to get _implied commitment_ by first asking "no more than 4 days" then "can you _try_ to get it done in 6 days"
-  - Revisiting an earlier point: "try" is a loaded term implying a commitment that will force the dev to work long nights or cancel family vacations to meet if he's implicitly commited to it
+  - Revisiting an earlier point: "try" is a loaded term implying a commitment that will force the dev to work long nights or cancel family vacations to meet if he's implicitly committed to it
   - Professional resists commitment in each instance, instead "communicating the probability distribution as clearly as they can so managers can make appropriate plans"
-
+  
 #### PERT
 
 - Program evaluation and review technique from US Navy
@@ -822,3 +822,32 @@ Your code must:
 - Trust your disciplines. Under pressure is not the time to abandon or question them
 - If you see someone who's under pressure, offer to pair with them 
 
+## Ch. 12 Collaboration
+
+- Various examples of how programmers can fall into harmful habits of preferring self-serving focus to a pursuing a shared aim
+- Idea of people on a team doing what seems interesting/what they _want_ to do over a sense of what would help the team and business achieve its goals
+
+#### Programmers vs. Employers
+
+- Story of employer being frustrated by description of a bug as interesting
+  - "_Bug's aren't interesting! They just need to be fixed_"
+  - Be mindful of the values and goals of the people who pay you
+- Don't bury yourself in technologies that interest you while the business burns down
+  - Your job is to keep the business afloat
+- Professional programmers take time to understand the business
+  - Talk to users about the software
+  - Talk to sales and marketing about the problems they have
+  - Talk to managers to understand the short and long term goals of the team
+
+#### Programmers vs. Programmers
+
+- Building a wall around code and not letting others touch it is a sure sign of a dysfunctional team
+  - "Owned code"
+- Far better to break down walls of code ownership and have the team own all the code
+  - Professionals work with each other to on as much of the system as possible
+  - Learn from each other by working on different parts of the system
+- One great way to avoid creating knowledge silos: pairing
+  - Everyone should be able to step into any role in a pinch
+  - Interesting idea to think of pairing as _a way of conducting a code review_
+- "I want you sitting around tables _facing_ each other" (165)
+  - Overhearing frustrated mutterings, serendipitous communications, verbal and body language 
