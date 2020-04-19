@@ -827,7 +827,7 @@ Your code must:
 - Various examples of how programmers can fall into harmful habits of preferring self-serving focus to a pursuing a shared aim
 - Idea of people on a team doing what seems interesting/what they _want_ to do over a sense of what would help the team and business achieve its goals
 
-#### Programmers vs. Employers
+### Programmers vs. Employers
 
 - Story of employer being frustrated by description of a bug as interesting
   - "_Bug's aren't interesting! They just need to be fixed_"
@@ -839,7 +839,7 @@ Your code must:
   - Talk to sales and marketing about the problems they have
   - Talk to managers to understand the short and long term goals of the team
 
-#### Programmers vs. Programmers
+### Programmers vs. Programmers
 
 - Building a wall around code and not letting others touch it is a sure sign of a dysfunctional team
   - "Owned code"
@@ -851,3 +851,41 @@ Your code must:
   - Interesting idea to think of pairing as _a way of conducting a code review_
 - "I want you sitting around tables _facing_ each other" (165)
   - Overhearing frustrated mutterings, serendipitous communications, verbal and body language 
+
+## Ch. 13 Teams and Projects
+
+### The gelled team
+
+- Takes time for a group to understand how to work effectively together
+  - Know one another's strengths and weaknesses
+  - Might take 6–12 months!
+  - Thinking of the awkward questions and miscommunications at the beginning of a team forming and how those tend to be less frequent as a team works together and figures out how to communicate effectively and anticipate what member do and don't have depth of knowledge with
+- Roughly 12 with programmers, testers, analysts + PM
+- May be a role of "coach, or master, with responsibility for defending the team's process and disciplines." (169)
+- Once a team has gelled, it only makes sense to keep them together and feed them new projects
+  - Pro organizations allocate projects around existing gelled teams rather than forming teams around projects (p.170)
+- One advantage is the ability for a tight team to address multiple projects simultaneously—divvied up according to skill and interest 
+  - Such teams have a better chance at efficiently shifting to 100% focus on something in need of urgent attention 
+- There might be concern from project owners about teams having multiple projects and being able to pivot between them because that means less certainty for the project owner, who could see resources quickly move off their project
+- "Teams are harder to build than projects." (171)
+  - Form persistent teams that move from one project to the next 
+
+## Ch. 14 Mentoring, Apprenticeship, and Craftsmanship
+
+- Notion of mentorship coming in unconventional forms
+  - A well written guide or by observation of someone who otherwise is not actively mentoring at all
+- Fascinating to think of the 70s and there not being many "senior programmers"
+  - Learning something yourself deeply a part of the industry 
+
+- Bob's points on apprenticeship acknowledge that the software industry is pretty unique in how it takes people with little to no experience and throws them into work that ought to warrant a degree of care. (critical systems)
+  - "companies who hire CS graduates ought to invest more in their training than McDonalds invests in their servers" 
+  - Idea that companies lose a lot of money because their devs aren't properly trained to work with the systems they're asked to build or extend
+
+- He points to a reality in which "in most companies, there is no technical supervision at all." (183)
+  - There's an escalator promotion and raise dynamic with programmers
+
+- "Craftsmanship is a contagion, a kind of mental virus. You catch it by observing others and allowing the meme to take hold." (184)
+  - Need to make the meme observable by acting as a role model and letting your craftsmanship show
+  - "Then let the meme do the rest of the work"
+
+- Bob calls for the industry to adopt more formal apprenticeship (more like how medical students slowly acquire responsibility)
