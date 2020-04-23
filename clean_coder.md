@@ -2,6 +2,10 @@
 
 Notes from the [Robert C. Martin book](https://www.amazon.co.uk/Clean-Coder-Conduct-Professional-Programmers/dp/0137081073)
 
+- 90% direct paraphrases of Uncle Bob's writing
+- A few scattered personal notes throughout
+- These are highlights that stood out to me personally rather than a comprehensive summary
+
 ## Ch. 1 Professionalism
 
 ### Taking Responsibility
@@ -315,7 +319,7 @@ Your code must:
 ### Flow zone
 
 - While developers often say they want to get into __the zone__, can see it really as a "mild meditative state in which certain rational faculties are diminished in favor of a sense of speed."
-- Being in the zone often means moving quickly, which feels god
+- Being in the zone often means moving quickly, which feels good
   - In fact, might just be disabling the capacity to critically evaluate if the solutions you intuitively lands on are the right ones or if alternatives might be better
   - May write code faster, but will need to revisit it more often
 - Big benefit of pair programming is that it's impossible to slip into the zone
@@ -372,7 +376,7 @@ Your code must:
   - You are then guilty of giving team and stakeholders false hope 
   - Only avoid facing the issue of making a tough decision and make that conversation more difficult later 
 - "There is not way to rush"
-  - Cannot solve problems faster, will only slow yourself down and other along with you by making a mess
+  - Cannot solve problems faster, will only slow yourself down and others along with you by making a mess
 - "you must answer your boss, your team, and your stakeholders by depriving them of hope."
 
 #### Overtime
@@ -390,7 +394,8 @@ Your code must:
   - I'm sure I've done it too. Feels like this is the key place done criteria comes up
 - "far more insidious case is when we manage to rationalize a new definition of done" (p.73)
 - Then other people follow suit and it becomes a lazy, destructive norm. 
-- Managers hear everything is going fine there's a time delay before the short cut blows up an expensive timeline is disrupted and reputations are knocked 
+- Managers hear everything is going fine. 
+  - There's a time delay before the short cut leads to an expensive timeline being disrupted and reputations being damaged 
 
 #### Define "done"
 
@@ -431,7 +436,7 @@ Your code must:
 - I must deprive others of hope (if our original estimates support it)
 - Saying you'll "try" and rush to meet a deadline makes you guilty of providing false hope
 - When offering help, plan to sit with a problem for an hour
-- Be wary of "the zone" since you may simply be embracing a head space in which you're incapable of holding multiple potential ways of solving a problem. THe solutions might be those that are the most intuitively evident rather than the most appropriate.
+- Be wary of "the zone" since you may simply be embracing a head space in which you're incapable of holding multiple potential ways of solving a problem. The solutions might be those that are the most intuitively evident rather than the most appropriate.
 - Even the most skilled developer benefits from a second perspective
   - Easy win for current project to break down large components into smaller, more understandable units
 
@@ -483,7 +488,7 @@ Your code must:
 ### Broadening Your Experience
 
 - w/o a "broadening influence" can become unprepared for changes that sweep the industry
-- Open source as "pro-bono" work like a other professionals might take on
+- Open source as "pro-bono" work like other professionals might take on
 - Practice time is not paid for by employer 
   - Liberty there is that you can pick up whatever language you want and keep your "polyglot skills sharp"
   - Good encouragement to maintain that suppleness and humility of mind that learners need
@@ -520,7 +525,7 @@ Your code must:
 
  - Acceptance tests help to demand a standard of detailed communication
  - Developers, stakeholders and testers all understand what the plan for the system behavior is
-   - Considering the the general desire to hand wave away complexity during discussions, this is a challenging task. It looks deceptively simple in writing, but the actual work of clearly specifying is rigorous 
+   - Considering the common desire to hand wave away complexity during discussions, this is a challenging task. It looks deceptively simple in writing, but the actual work of clearly specifying is rigorous 
    - "Professional developers make it their responsibility" to work with all parties to know what is about to  be built
 
 #### Automation
@@ -541,7 +546,7 @@ Your code must:
 #### Who writes acceptance tests and when
 
 - Ideally, stakeholders and QA would write these tests and developers review for consistency
-- IRL, its delegated to business analysts, QA or even developers
+- IRL, it's delegated to business analysts, QA or even developers
   - If devs need to write these tests, make sure another dev is the one implementing the tested feature
 - Typically: BA's write "happy path" because those tests describe the features providing business value
 - QA writes unhappy path tests: boundary conditions, corner cases, exceptions
@@ -602,7 +607,7 @@ Your code must:
 ### QA Should Find Nothing
 
 - Every time QA finds something wrong, the dev team should be dismayed, and ask themselves how it happened and how it can never happen again
-- QA's role is to work with the business to create the automated acceptance tests that because the true spec and requirements doc for the system
+- QA's role is to work with the business to create the automated acceptance tests that become the true spec and requirements doc for the system
 
 ### Test Automation Pyramid
 
@@ -650,7 +655,7 @@ Your code must:
   - Trade offs if particularly interesting meeting or if it benefits other teams in a key way
   - Important thing to keep in mind is if you can afford it
   - Your responsibility is to your projects first, not other teams'
-  - "The person inviting you to a meeting is not responsible for man
+  - The person inviting you to a meeting is not responsible for managing your time
 - Important duty of a manager is to keep devs out of meetings 
   - Good manager will defend decision to decline because they are concerned about your time
 
@@ -889,3 +894,27 @@ Your code must:
   - "Then let the meme do the rest of the work"
 
 - Bob calls for the industry to adopt more formal apprenticeship (more like how medical students slowly acquire responsibility)
+
+## Book club prompts 
+
+_Final assignments from book club_
+
+Aim: end up with some meaningful, personal takeaways. A book like this is kinda pointless unless we find a way to live some of its lessons.
+
+### 2nd to last session assignment
+1. Over the next 3 days, take note of a 1–2 things that come up in your daily work that link back to Clean Coder. Hopefully we all find a couple noteworthy moments that remind us of bits from the book. Collecting those should be a good way to review relevant concepts from the text.
+1. Please write down 1 action of professional levelling up inspired by any part of the book that you can commit to trying out IRL between now and our next meeting.
+
+- “Don’t rest at misunderstanding”
+  - I’ll push to ensure there’s a clear understanding of feature requirements. This may involve extra efforts during video chats and asking “stupid questions” and it may involve working with our product team to write Gherkin expectations.
+
+### Last session assignment
+
+__Drawing from your highlights across the entire book, please write out 3 behaviors you will commit to adopting in the next 3 months.__
+
+- I commit to knowing my code works and solves the customer’s problem (even if it that means specifying it!) before putting it into the codebase.
+  - Basically, I don’t want to push code and then have bugs or edge cases found in it later. At least not without the requisite horror
+
+- I commit to making it my responsibility to work with my team and stakeholders to specify tasks.
+
+- I commit to providing my managers and stakeholders with the best possible information, which will require saying no to some requests and asking that others be reconsidered. The goal is to plan for and pursue the best possible outcome for the project, which includes realistic estimations, probability distributions and a rigorous denial of hope when it threatens realism.
