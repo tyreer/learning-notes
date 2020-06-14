@@ -1,8 +1,8 @@
 # Notes on Simplify React Apps with React Hooks
 
-https://egghead.io/courses/simplify-react-apps-with-react-hooks
-
-[Repo](https://github.com/kentcdodds/react-github-profile/tree/egghead-2018/refactor-00)
+- Course by Kent C. Dodds
+- https://egghead.io/courses/simplify-react-apps-with-react-hooks
+- [Repo with course examples](https://github.com/kentcdodds/react-github-profile/tree/egghead-2018/refactor-00)
 
 ## Handle Deep Object Comparison in React's useEffect hook with the useRef Hook
 
@@ -10,8 +10,22 @@ https://github.com/kentcdodds/react-github-profile/blob/egghead-2018/refactor-03
 
 ```js
 function Query({query, variables, normalize = data => data, children}) {
-...
 
+    const [state, setState] = useReducer(
+    (state, newState) => ({...state, ...newState}),
+    {
+      loaded: false,
+      fetching: false,
+      data: null,
+      error: null,
+    },
+  )
+```
+
+- Nice to see `useReducer` as a basic `setState` implementation
+  - Course mentions a more full-featured custom hook https://github.com/suchipi/use-legacy-state
+
+```js
   useEffect(() => {
     if (isEqual(previousInputs.current, [query, variables])) {
       return
@@ -46,6 +60,179 @@ function Query({query, variables, normalize = data => data, children}) {
 }
 ```
 
+- Interesting to see `useRef` coordinated with `useEffect` in this way
+
+## Safely setState on a Mounted React Component through the useEffect Hook
+
+https://github.com/kentcdodds/react-github-profile/blob/egghead-2018/refactor-04/src/screens/user/components/query.js
+
+```js
+const mountedRef = useRef(false);
+useEffect(() => {
+  mountedRef.current = true;
+  return () => (mountedRef.current = false);
+}, []);
+const safeSetState = (...args) => mountedRef.current && setState(...args);
+```
+
+- Empty dependency array allows this to only run on mount and unmount, providing the desired ref values
+- Note that this is generally not how you want to solve this problem (async calls setting state on unmounted components)
+  - Better solution is to cancel the the request to stop the promise
+  - This is solving for a case where you're unable to cancel requests
+
+## Extract Generic React Hook Code into Custom React Hooks
+
+https://github.com/kentcdodds/react-github-profile/blob/egghead-2018/refactor-06/src/screens/user/components/query.js
+
+```js
+function useSetState(initialState) {
+  return useReducer(
+    (state, newState) => ({ ...state, ...newState }),
+    initialState
+  );
+}
+
+function useSafeSetState(initialState) {
+  const [state, setState] = useSetState(initialState);
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => (mountedRef.current = false);
+  }, []);
+  const safeSetState = (...args) => mountedRef.current && setState(...args);
+
+  return [state, safeSetState];
+}
+
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+```
+
+- Can see how you'd build up a set of these and compose new hooks with existing ones
+
+## Refactor a render Prop Component to a Custom React Hook
+
+https://github.com/kentcdodds/react-github-profile/blob/egghead-2018/refactor-09/src/screens/user/components/query.js
+
+```js
+function useQuery({ query, variables, normalize = (data) => data }) {
+  const [state, setState] = useSafeSetState({
+    loaded: false,
+    fetching: false,
+    data: null,
+    error: null,
+  });
+
+  useDeepCompareEffect(() => {
+    setState({ fetching: true });
+    client
+      .request(query, variables)
+      .then((res) =>
+        setState({
+          data: normalize(res),
+          error: null,
+          loaded: true,
+          fetching: false,
+        })
+      )
+      .catch((error) =>
+        setState({
+          error,
+          data: null,
+          loaded: false,
+          fetching: false,
+        })
+      );
+  }, [query, variables]);
+
+  return state;
+}
+
+const Query = ({ children, ...props }) => children(useQuery(props));
+
+export default Query;
+export { useQuery };
+```
+
+- Probably the most valuable lesson for me here. The Hook version is so much cleaner to use compared to the render-prop version's nesting
+  - Good to note that both allow for sharing cross-cutting concerns
+- Good demo of the "backward compatible" export of the render prop component via `children(useQuery(props))`
+
+## Dynamically Import React Components with React.lazy and Suspense
+
+```js
+const Home = React.lazy(() => import("./screens/home"));
+const User = React.lazy(() => import("./screens/user"));
+
+...
+
+<Suspense
+  fallback={<LoadingMessagePage>Loading Application</LoadingMessagePage>}
+>
+  <Router>
+    <Home path="/" />
+    <User path="/:username" />
+  </Router>
+</Suspense>
+```
+
+- Route based here, but I imagine this could also work when applied to children components within a parent component
+
+```js
+const Home = loadable({
+  loader: () => import("./screens/home"),
+  loading: LoadingFallback,
+});
+
+const User = loadable({
+  loader: () => import("./screens/user"),
+  loading: LoadingFallback,
+});
+
+function App() {
+  return (
+    <ThemeProvider>
+      <GitHubContext.Provider>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Router>
+            <Home path="/" />
+            <User path="/:username" />
+          </Router>
+        </ErrorBoundary>
+      </GitHubContext.Provider>
+    </ThemeProvider>
+  );
+}
+```
+
+- Original implementation with `react-loadable` is also interesting https://github.com/jamiebuilds/react-loadable
+
+## Preload React Components with the useEffect Hook
+
+```js
+function Home() {
+  useEffect(() => {
+    // preload the next page
+    import('../user')
+  }, [])
+
+  ...
+}
+```
+
+- This will load the `User` page as soon as `Home` is finished rendering
+  - Relies on how Webpack works (I assume the dependency graph), to only include code that's imported/required
+- In the case of this example, we're highly confident the user will go to the next page from the home page
+  - Lazy loading allowed us to only load `Home` initially, but then as soon as home is rendered, proactively fetch/import the JS for `User` so there wouldn't be a lag when continuing from the `Home` to `User` page
+
+## Other notes
+
 ```js
 function useDeepCompareEffect(callback, inputs) {
   const cleanupRef = useRef();
@@ -76,7 +263,11 @@ export function useDeepCompareEffect(callback, inputs) {
 
 - How is this code less effective?
 
-### Demo
+## Demo
+
+A demo to recreate a bug similar to the issue explored in `Handle Deep Object Comparison in React's useEffect hook with the useRef Hook`: https://codesandbox.io/s/github/tyreer/hooks-learning
+
+### What's the bug? (answer)
 
 The object we're passing into both query components is created during render.
 
