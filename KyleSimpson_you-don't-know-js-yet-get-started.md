@@ -46,3 +46,117 @@
 > JS is a multi-paradigm language, meaning the syntax and capabilities allow a developer to mix and match (and bend and reshape!) concepts from various major paradigms, such as procedural, object-oriented (OO/classes), and functional (FP).
 
 > JS is a compiled language, meaning the tools (including the JS engine) process and verify a program (reporting any errors!) before it executes.
+
+## [Ch 2: Surveying JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md)
+
+### [How We Organize in JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md#how-we-organize-in-js)
+
+- Two patterns for organizing code (data and behaviour): classes and modules
+> A class in a program is a definition of a "type" of custom data structure that includes both data and behaviors that operate on that data. 
+- Classes define how the data structure works, but are not themselves concrete values 
+ - A class must be _instantiated_ with the `new` keyword
+ - Does React do this "under the hood" for class components? i.e. When I say `<MyComponent />`, is React instantiating an instance of that class?
+
+```js
+class Page {
+    constructor(text) {
+        this.text = text;
+    }
+
+    print() {
+        console.log(this.text);
+    }
+}
+
+class Notebook {
+    constructor() {
+        this.pages = [];
+    }
+
+    addPage(text) {
+        var page = new Page(text);
+        this.pages.push(page);
+    }
+
+    print() {
+        for (let page of this.pages) {
+            page.print();
+        }
+    }
+}
+
+var mathNotes = new Notebook();
+mathNotes.addPage("Arithmetic: + - * / ...");
+mathNotes.addPage("Trigonometry: sin cos tan ...");
+
+mathNotes.print();
+// ..
+```
+
+- Key point that the data (e.g. `text` string and `pages` array) are _organized_ alongside their behaviors (e.g. `print` and `addPage` methods)
+- We can write a program without an organizing mechanism like a class, but it would be harder to reason about and maintain
+  - Reminds me of some of the massive 600+ line files I've had to work with where you need multiple tabs open at various lines of the file
+
+### (Class inheritance)[https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md#class-inheritance]
+
+```js
+class Publication {
+  constructor(title,author,pubDate) {
+      this.title = title;
+      this.author = author;
+      this.pubDate = pubDate;
+  }
+
+  print() {
+      console.log(`
+          Title: ${ this.title }
+          By: ${ this.author }
+          ${ this.pubDate }
+      `);
+  }
+}
+```
+
+```js
+class Book extends Publication {
+    constructor(bookDetails) {
+        super(
+            bookDetails.title,
+            bookDetails.author,
+            bookDetails.publishedOn
+        );
+        this.publisher = bookDetails.publisher;
+        this.ISBN = bookDetails.ISBN;
+    }
+
+    print() {
+        super.print();
+        console.log(`
+            Publisher: ${ this.publisher }
+            ISBN: ${ this.ISBN }
+        `);
+    }
+}
+
+class BlogPost extends Publication {
+    constructor(title,author,pubDate,URL) {
+        super(title,author,pubDate);
+        this.URL = URL;
+    }
+
+    print() {
+        super.print();
+        console.log(this.URL);
+    }
+}
+```
+
+- `Book` and `BlogPost` _extend_ the general `Publication` class with more specific behavior
+- `super()` delegates the initialisation work to the parent class's `constructor`
+- Both child classes have a `print()` method that __overrides__ the _inherited_ method 
+  - _polymorphism_ = both inherited and overridden methods can have same name 
+  - Inheritance allows children classes to cooperate with parent classes by accessing / using its behavior and data
+
+## [Ch.3 Digging into the Roots of JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md)
+
+### [Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md#prototypes)
