@@ -97,7 +97,7 @@ mathNotes.print();
 - We can write a program without an organizing mechanism like a class, but it would be harder to reason about and maintain
   - Reminds me of some of the massive 600+ line files I've had to work with where you need multiple tabs open at various lines of the file
 
-### (Class inheritance)[https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md#class-inheritance]
+### [Class inheritance](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md#class-inheritance)
 
 ```js
 class Publication {
