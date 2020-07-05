@@ -49,6 +49,81 @@
 
 ## [Ch 2: Surveying JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md)
 
+### Declaring and using variables
+
+- `let` allows for more limited access to a variable than `var`
+  - _block scoping_ vs _regular/function scoping_
+- Common challenge that we should avoid `var` to favour the ES6 variables
+  - Counterpoint: `var` usefully conveys that "this variable will be seen by a wider scope (of the whole function)"
+  - That scoping may be appropriate, and the developer may want to use `var` to indicate that
+- `const` = cannot be _reassigned_
+  - Not, cannot be _changed_
+- Advice to avoid `const` with objects because their values can be changed/mutated without the object itself being reassigned
+
+### Functions
+
+```js
+function robsNamedFunction() {
+    ...
+}
+```
+- _function declaration_ because it appears as a statement by itself (rather than as an expression in another statement)
+- Association between the identifier (`robsNamedFunction`) and the function value occurs at _compile time_ 
+
+```js
+let robsNamedFunction = function() {
+    ...
+}
+```
+- _function expression_ because the function is an expression that is _assigned_ to a variable
+- Association between the identifier and the function value occurs at _run time_
+
+> It's extremely important to note that in JS, functions are values that can be assigned and passed around. Not all languages treat functions as values, but it's essential for a language to support the functional programming pattern
+
+- Curious about any implications of the compile vs. run phase of identifier association
+  - Maybe affects static analysis? 
+
+### Comparisons
+
+- `===` is often considered to check both the _type_ and _value_
+  - In fact, all comparisons check type and value, but `===` just doesn't allow for any type _coercion_
+
+```js
+NaN === NaN;    //false
+0 === -0;       //false
+```
+- Two special values where the `===` _operator_ is designed to "lie"
+  - "Deep historical and technical reasons"
+- Can use `Number.isNaN(...)` or `Object.is(...)`
+
+```js
+Object.is(0, -0);            // false
+Object.is(-0, -0);           // true
+Object.is(NaN, 0/0);         // true
+```
+- `Object.is(...)` as the `====` check
+- With objects, a _content-aware_ comparison is referred to as "structural equality"
+  - In JS `===` provides a check of _identity equality_ for objects and NOT _structural equality_
+
+> In JS, all object values are held by reference, are assigned and passed by reference-copy, and are compared by reference (identity) equality
+
+- To properly cover all edge cases in structural equality is very complex, which is why it doesn't exist in JS
+  - For instance, stringifying a function doesn't take into account things like closure
+
+- __Coercive comparisons__: The `==` operator can be considered _coercive equality_
+  - Simple enough to prefer `===`, but you don't have a choice with `<` or  `>=`, which will allow coercion first if types differ
+  
+```js
+var x = "10"
+var y = "5"
+
+x < y   // true!
+```
+
+- If both values are strings, the _relational operators_ will perform an alphabetical comparison
+  - Could imagine this being a sneaky case where a numeric value is passed into a context as a string and a comparison yields an unexpected result
+
+
 ### [How We Organize in JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch2.md#how-we-organize-in-js)
 
 - Two patterns for organizing code (data and behaviour): classes and modules
@@ -90,7 +165,6 @@ mathNotes.addPage("Arithmetic: + - * / ...");
 mathNotes.addPage("Trigonometry: sin cos tan ...");
 
 mathNotes.print();
-// ..
 ```
 
 - Key point that the data (e.g. `text` string and `pages` array) are _organized_ alongside their behaviors (e.g. `print` and `addPage` methods)
@@ -155,7 +229,66 @@ class BlogPost extends Publication {
 - `super()` delegates the initialisation work to the parent class's `constructor`
 - Both child classes have a `print()` method that __overrides__ the _inherited_ method 
   - _polymorphism_ = both inherited and overridden methods can have same name 
-  - Inheritance allows children classes to cooperate with parent classes by accessing / using its behavior and data
+  - Inheritance allows children classes to cooperate with parent classes by accessing / using its behavior and data, while being organized in their own separate logical units (as a class)
+
+### Classic Modules
+
+- ES6 added a module syntax form ot native JS syntax, but another module pattern has been important and common previously
+
+> an outer function (that runs at least once), which returns an "instance" of the module with one or more functions exposed that can operate on the module instance's internal (hidden) data
+
+```js
+function Publication(title, author) {
+    var publicAPI = {
+        print() {
+            console.log(title, author)
+        }
+    };
+
+    return publicAPI;
+}
+
+function Book(bookDetails) {
+    var pub = Publication(bookDetails.title, bookDetails.author);
+    
+    var publicAPI = {
+        print() {
+            pub.print()
+            console.log(bookDetails.publisher)
+        }
+    };
+
+    return publicAPI;
+}
+```
+
+- Similar to classes, but with methods and data accessed as _identifier variables_ in scope rather than via `this.`
+- All data and methods are public with a class, but a _module factory function_ exposes public methods explicitly via the returned object, while other methods _remain private_ inside the factory function
+
+```js 
+var robsBook = Book({
+    title: "Rob's cool book",
+    author: "Rob"
+})
+
+robsBook.print()
+```
+
+- Usage is quite similar to a class, just that there's no `new` keyword and the module factory function is called directly
+
+### ES Modules
+
+- Introduced in ES6 to provide same general utility as classic modules
+- Implementation is very different though 
+- Instead of a wrapping context that the factory functions provided: the _file_ for the ESM is the wrapping context
+  - ESMs are always module based: one file = one module 
+- Use `export` keyword to add a variable or method to the ESM's _public_ API definition
+  - Defined in a module, but not exported = stays hidden
+- We don't "instantiate" an ES module
+  - First `import` creates a single instance
+  - All other `import`s just receive a reference to that same single instance
+  - _singleton_ 
+
 
 ## [Ch.3 Digging into the Roots of JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md)
 
