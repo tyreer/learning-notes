@@ -292,4 +292,121 @@ robsBook.print()
 
 ## [Ch.3 Digging into the Roots of JS](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md)
 
-### [Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md#prototypes)
+### Iterator-consumers
+
+- The `...` operator 
+  - Two symmetrical forms: `spread` and `rest`
+- _Spread_ is an __iterator-consumer__
+  - Official JS spec only allows spread into an array or a function call
+    - _Array spread_
+    - _Function call spread_
+  - But _object spread_ is common enough (needs Babel)
+
+```js
+var myNewArray = [...previouslyDefinedIterable]
+myGreatFunction(...previouslyDefinedIterable)
+```
+
+- `for...of` is another ES6 iterator-consumer
+
+```js
+for (let value of previouslyDefinedIterable){
+  ...
+}
+```
+
+### Iterables
+
+> ES6 defined the basic data structure / collection types in JS as iterables
+- strings, arrays, maps, sets (and others)
+- Most all these will have `keys()`, `values()`, and `entries()` methods
+
+- A `Map` data structure has a default iteration method over its _entries_ rather than its _values_
+  - An entry = _tuple_ (two-element array) with both a key and a value
+
+```js
+// Given two DOM elements button1 + button2
+
+var buttonNames = new Map();
+buttonNames.set(button1, "Home")
+buttonNames.set(button2, "Cart")
+
+for (let [button, buttonName] of buttonNames) {
+  button.addEventListener('click', function onClick(){
+    console.log(`Clicked ${buttonName}`)
+  })
+}
+```
+
+### Closure
+
+> Closure is when a function remembers and continues to access variables from outside its scope, even when the function is executed in a different scope.
+- Closure is an aspect of _functions_
+- To observe a closure, you must execute a function in a _different scope_ than where it was originally defined
+
+```js
+function giveMeAGreeting(greeting) {
+  return function giveMeAName(name) {
+    console.log(`${greeting}, ${name}!`)
+  }
+}
+
+const hello = giveMeAGreeting("Hello")
+const sup = giveMeAGreeting("Sup")
+
+hello("Harold")
+sup("Sandra")
+```
+
+- Nice higher-order function example where the `greeting` value is saved in the instance of the inner function thanks to closure
+  - The inner function `giveMeAName` __closes over__ the `greeting` variable from its outer scope
+  - `hello` and `sup` are functions that persist the `greeting` argument passed into `giveMeAGreeting`
+> When the `giveMeAGreeting(...)` function finishes running, normally we would expect all of its variables to be garbage collected (removed from memory) 
+- But because the inner function instances are still alive, being assigned to `hello` and `sup`, _their closures_ preserve the `greeting` variables
+
+```js
+function counter(step = 1) {
+  let count = 0
+  return function increment(){
+    count = count + step;
+    return count
+  }
+}
+
+const add100 = counter(100)
+const add1 = counter(1)
+
+add100();
+add100();
+add1();
+
+const bigMoney = add100() //300
+const broke = add1() //2
+```
+- Instances of the inner function __close over__ both the `count` and `step` values from the outer scope
+- Point here is that the __variables within a closure are not a snapshot__ and can be changed
+> a direct link and preservation of the variable itself 
+
+```js 
+function getData(url) {
+  ajax(url, function onResponse(response){
+    console.log(`Response from ${url}: ${response}`)
+  })
+}
+```
+> Closure is most common when working with asynchronous code, such as with callbacks
+- `getData` finishes right away, but the `url` parameter variable __stays alive__ as long as needed
+
+```js
+for (let [index, button] of buttons.entries()) {
+  button.addEventListener('click', function onClick(){
+    console.log(`Button ${index} clicked`)
+  })
+}
+```
+- Example where the outer scope isn't a function
+- But the click handler is a function, and it creates the closure that preserves the `index` variable 
+  - Only functions have closure 
+
+
+### [Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md#prototypes)  
