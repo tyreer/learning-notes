@@ -409,4 +409,62 @@ for (let [index, button] of buttons.entries()) {
   - Only functions have closure 
 
 
+### `this` keyword
+
+- Common _misconceptions_
+  - `this` refers to the function itself
+  - `this` points to the instance that a method belongs to
+
+- Functions have two key characteristics determining what they can access:
+  - _scope_: the set of rules that controls how references to variables are resolved
+    - When it is defined, a function is attached to its enclosing scope via _closure_
+  - _execution context_: can be thought of as a tangible object whose properties are made available to a function while it executes
+    - Exposed to the function via `this`
+
+- Scope is static 
+  - Contains fixed variables at moment and location a function is defined
+
+- Execution context is dynamic
+  - Dependant on __how a function is called__ 
+  - Not a fixed characteristic, but a dynamic one determined every time a function is called
+
+- The benefit of a _this-aware_ function is the ability to flexibly re-use a function with different data from different objects
+
+#### No context specified
+
+```js
+function classroom(teacher) {
+  return function study() {
+    console.log(`${teacher} says to study ${this.topic}`)
+  }
+}
+
+var assignment = classroom("Robert")
+assignment() // Robert says to study undefined
+```
+- Here, the inner function, `study`, is __dependent on its execution context__ because it is a _this-aware_ function
+- Without a context specified, the default context is the global object
+  - `globalThis.topic` will equal `undefined`
+
+#### Context via object
+```js
+let homework = {
+  topic: "JS",
+  assignment: assignment
+}
+homework.assignment() // Robert says to study JS
+```
+- A copy of the _assignment function reference_ is set on the homework object
+  - `this` for the function call = homework object 
+
+#### Context via `call()`
+```js
+let otherHomework = {
+  topic: "slam dunks"
+}
+
+assignment.call(otherHomework) // Robert says to study slam dunks
+```
+- `call()` takes an object to set the `this` reference for the function call
+
 ### [Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md#prototypes)  
