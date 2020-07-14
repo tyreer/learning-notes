@@ -468,3 +468,56 @@ assignment.call(otherHomework) // Robert says to study slam dunks
 - `call()` takes an object to set the `this` reference for the function call
 
 ### [Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch3.md#prototypes)  
+ 
+ - A characteristic of __objects__
+   - Provides rules for the resolution of property access
+
+- Helpful to think of prototypes as a form of _linkage_ between objects
+  - _prototype chain_ = series of objects linked together via prototypes
+  
+> The purpose of this prototype linkage is so that accesses against object B for properties/methods that B does not have, are delegated to object A
+- Notion of __delegation__ is useful
+
+- `Object.create()` defines a an object prototypes linkages
+  - `Object.create(null)` creates a standalone object without any of the built in JS object properties or methods
+- Another way to create an object with prototype linkage that used to be very common prior to ES6 is through "Prototypal 'Classes'"
+
+#### `this` revisited
+
+- One of the main reasons `this` is dynamic based on how a function is called is so that prototype-delegated function calls maintain the expected `this`
+
+```js 
+let homework = {
+  study() {
+    console.log(`Study ${this.topic}`);
+  }
+};
+
+let jsHomework = Object.create(homework);
+jsHomework.topic = "JS";
+jsHomework.study(); // "Study JS"
+
+let dunkHomework  = Object.create(homework);
+dunkHomework.topic = "slam dunks";
+dunkHomework.study(); // "Study slam dunks"
+```
+
+- Both `jsHomework` and `dunkHomework` prototype link to the same `homework` object
+  - Because neither has a `study` method, they delegate up the chain to `homework`, which does
+  - Cool thing to point out though is that `this` within `study` still resolves to the object which executed `study`
+  - Example of dynamic `this` being determined based on _execution context_
+  - Other languages may place `this` on `homework`, since that's where `study` is defined, but not JS
+
+> Unlike may other languages, JS's `this` being dynamic is a critical component of allowing prototype delegation, and indeed `class`, to work as expected!
+
+
+## [Ch.4 The Bigger Picture](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch4.md)
+
+### Scope and Closure
+
+- JS is lexically scoped 
+- Many claim it isn't due to 2 characteristics not present in other lexically-scoped languages
+  - _hoisting_: where all variables declared anywhere in the scope are treated as if they were declared at the beginning of the scope
+  - _function-scope `var`_: `var` variables are function scoped even if they appear within a block
+> Closure is the natural result of lexical scope when the language has functions as first-class values, as JS does.
+- A function maintains access to to its original scope variables regardless of the scope it's executed in (this is closure)
