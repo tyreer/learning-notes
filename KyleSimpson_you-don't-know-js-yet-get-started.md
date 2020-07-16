@@ -513,7 +513,7 @@ dunkHomework.study(); // "Study slam dunks"
 
 ## [Ch.4 The Bigger Picture](https://github.com/getify/You-Dont-Know-JS/blob/529671508dde28147221addbf4038bf6e2f9db31/get-started/ch4.md)
 
-### Scope and Closure
+### Pillar 1: Scope and Closure
 
 - JS is lexically scoped 
 - Many claim it isn't due to 2 characteristics not present in other lexically-scoped languages
@@ -521,3 +521,57 @@ dunkHomework.study(); // "Study slam dunks"
   - _function-scope `var`_: `var` variables are function scoped even if they appear within a block
 > Closure is the natural result of lexical scope when the language has functions as first-class values, as JS does.
 - A function maintains access to to its original scope variables regardless of the scope it's executed in (this is closure)
+
+### Pillar 2: Prototypes
+
+- JS is one of only a few languages that lets you create objects directly and explicitly, without first defining their structure in a class
+> For many years, people implemented the class design pattern on top of prototypes
+  - This is _prototypal inheritance_, by and large avoided in today's JS
+- ES6 `class` keyword "doubled-down" on the learning toward OO/class-style programming
+- This focus can obscure the potential of the prototype system
+  - The ability of two objects to simply cooperate dynamically through sharing a `this` context
+- Classes are _one patten_ you can build on top of the prototype system
+  - But can also forget classes and just let objects cooperate using the prototype chain
+  - Called _behaviour delegation_
+  > But class inheritance gets almost all the attention. And the rest goes to functional programming, as the sort of "anti-class" way of designing programs.
+
+- Bits of advice:
+  - To help a dev team embrace new practices, let before and after code samples do much of the talking
+  - Work on building consensus on why it's important to revisit and reconsider an approach
+  - Push for decisions based on an analysis of code rather than authoritative personas
+
+## Appendix A: Exploring further
+
+- Primitive values are always assigned as __value copies__
+- Object values are always assigned __by reference__
+  - _reference_: two or more variables point to the same value
+  - Two or more variables can have copies of a reference to a single shared object
+> Primitives are held by value. Objects are held by reference
+- Interesting that other languages might allow you to choose between assigning/passing the value itself or a reference to the value
+  - But not JS!
+
+```js
+const myFunction = function(arg){
+  ...
+}
+```
+
+- On the right side is an _anonymous function expression_
+  - In the cases where an assignment uses `=`, ES6 will perform _name inference_ to give `myFunction.name = "myFunction"`
+  - But if the function expression is passed as an argument to another function call, there will be no name inference
+  - Any errors will then have a stack trace identifying an `anonymous function`
+
+```js
+const myFunction = function robsFunction(arg){
+  ...
+}
+```
+
+- On the right side is a _named function expression_
+  - `myFunction.name = "robsFunction"`
+
+> Most developers tend to be unconcerned with using anonymous functions. They;re shorter and unquestionably more common
+
+- Argument on the other hand is that any function in our code has a purpose, and you should name it in order to describe that purpose
+  - This prevents the next developer from having to evaluate the code in their head to identify its purpose
+  
