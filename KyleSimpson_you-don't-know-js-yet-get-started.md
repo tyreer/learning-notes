@@ -540,7 +540,7 @@ dunkHomework.study(); // "Study slam dunks"
   - Work on building consensus on why it's important to revisit and reconsider an approach
   - Push for decisions based on an analysis of code rather than authoritative personas
 
-## Appendix A: Exploring further
+## [Appendix A: Exploring further](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/get-started/apA.md#appendix-a-exploring-further)
 
 - Primitive values are always assigned as __value copies__
 - Object values are always assigned __by reference__
@@ -570,8 +570,25 @@ const myFunction = function robsFunction(arg){
 - On the right side is a _named function expression_
   - `myFunction.name = "robsFunction"`
 
-> Most developers tend to be unconcerned with using anonymous functions. They;re shorter and unquestionably more common
+> Most developers tend to be unconcerned with using anonymous functions. They're shorter and unquestionably more common
 
 - Argument on the other hand is that any function in our code has a purpose, and you should name it in order to describe that purpose
   - This prevents the next developer from having to evaluate the code in their head to identify its purpose
   
+
+```js
+const myFunction = () => {...}
+
+onClick(() => {...})
+```
+- Arrow functions are __syntactically anonymous__
+  - They can only have an _inferred_ name if assigned, as in the first example
+  - As a call argument, in the second example, they are only ever anonymous. This is a very common use case
+- Interesting challenge to it being used as "a new default"
+  - It is new(ish)
+  - It is shorter
+  - But it has the drawback of being easily anonymous, which doesn't serve debugging well
+> This kind of function actually has a specific purpose (i.e., handling the `this` keyword lexically )
+
+- [Prototypal  "Classes"](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/get-started/apA.md#prototypal-classes)
+  - Good to have the name for this as I never know what to call this pattern
