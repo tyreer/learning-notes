@@ -196,7 +196,6 @@ const addIntegersWithThree = addIntegers(3)
 console.log(addIntegersWithThree(10)) //13
 ```
 - ES2015 makes this very concise 
-
 - Course comments point to this as setting up _partial application_
 
 ```js
@@ -211,3 +210,109 @@ console.log(getSquares(arr1)) // [1, 4, 9]
 console.log(getSquares(arr2)) // [16, 25, 36]
 ```
 - Nice demo where we can define the callback in one place and apply it via the second curried function (`getSquares`)
+
+## Partial Application 
+
+> The main benefit of partial application is our ability to delay the evaluation of a function while still supplying some of the arguments to be stored and reused throughout our application.
+
+- Interesting concept, I suppose this is just a practical application of JS closures
+- I've used closures strategically before via function values, but not via curried, unary functions like this
+
+```js
+const getFromAPI = baseURL => endPoint => callback =>
+  fetch(`${baseURL}${endPoint}`)
+    .then(res => res.json())
+    .then(data => callback(data))
+    .catch(err => {
+      console.error(err.message)
+    })
+
+// First invocation allows baseURL to be stored 
+const getGithub = getFromAPI(
+  'https://api.github.com'
+)
+
+// Then the endPoint is passed in
+const getGithubUsers = getGithub('/users')
+const getGithubRepos = getGithub('/repositories')
+
+// Finally the callback is provided and the core function logic is executed
+getGithubUsers(data =>
+  data.forEach(user => {
+    console.log(`User: ${user.login}`)
+  })
+)
+getGithubRepos(data =>
+  data.forEach(repo => {
+    console.log(`Repo: ${repo.name}`)
+  })
+)
+```
+
+- Each curried function returns a new function that has the previously passed argument stored in closure
+- The new functions have access to previously provided values
+
+## Point-free programming
+
+```js
+arr.map(x => x * 2)
+```
+
+- Here an anonymous function creates an _interim variable_ that we're calling `x`
+  - _point_ = the variable we're calling `x` just points to the value from the callback 
+
+```js
+function double(x) {
+  return x *2
+}
+
+arr.map(double)
+```
+
+- In contrast, a named function can have an argument signature that allows us to avoid creating a _pointer_
+
+- Doesn't the `double` function's argument just create a point?
+  - Yes, looks like the idea is to compose with small functions that themselves will have points
+  - https://www.freecodecamp.org/news/how-point-free-composition-will-make-you-a-better-functional-programmer-33dcb910303a/
+
+> "Point-free style — aims to reduce some of the visual clutter by removing unnecessary parameter-argument mapping."
+
+- The main gain is readability 
+  - Naming a function according to its _intention_ helps the next dev understand what the code is doing
+  - Funny, Kyle Simpson uses _double_ as an example of his preference for named functions over anonymous ones in YDKJSY
+- Ease in unit testing the small named functions is also a benefit
+
+```js
+const Item = ({ id, text }) => <li key={id}>{text}</li>
+
+const List = ({ items }) => (
+  <ul>
+    {items.map(Item)}
+  </ul>
+)
+```
+- Nice example of using a _point-free style_ in a React list from the Egghead video's [comments section](https://egghead.io/lessons/javascript-eliminate-anonymous-javascript-functions-with-pointfree-programming)
+
+
+## Argument Order
+
+- Ensure curried functions have their least specific arguments last
+
+```js
+const customMap = callback => array => array.map(callback)
+const pick = key => obj => obj[key]
+const pickName = pick('name')
+
+const people = [
+  { name: 'Kyle' },
+  { name: 'Shirley' },
+  { name: 'Kent' },
+  { name: 'Sarah' },
+  { name: 'Ken' }
+]
+
+const names = customMap(pickName)(people)
+```
+- In this `customMap()` function the callback comes first so the data can be last
+- Nice demo of the `()()` invocation pattern
+
