@@ -362,3 +362,35 @@ const slugs = slugify(bookTitles)
 
 - `trace()` utility function allows us to pass in a message and log out the argument value at a certain point in the composition
   - Makes use of the [comma operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Comma_Operator)
+
+
+## Use case: Data manipulation
+
+- Nice slide deck that follows the course / repo: https://kyleshevlin.github.io/just-enough-fp/#/
+  - [Bonus use case example](https://kyleshevlin.github.io/just-enough-fp/#/47) not included in the Egghead videos
+  - Given a big JSON object from an endpoint, functional programming can be useful in restructuring and organizing that data
+
+```js
+const filter = fn => xs => xs.filter(fn)
+const take = n => xs => xs.slice(0, n)
+const prop = key => obj => obj[key]
+
+const first5InStock = compose(
+  take(5),
+  filter(prop('inStock'))
+)
+```
+
+```js
+const totalCost = compose(
+  discount(salesPercent),
+  reduce(add)(0),
+  map(prop('cost'))
+)
+
+totalCost([
+  { id: 1, cost: 40 },
+  { id: 2, cost: 35 },
+  { id: 3, cost: 50 }
+]) // 100
+```
