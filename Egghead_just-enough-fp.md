@@ -293,7 +293,6 @@ const List = ({ items }) => (
 ```
 - Nice example of using a _point-free style_ in a React list from the Egghead video's [comments section](https://egghead.io/lessons/javascript-eliminate-anonymous-javascript-functions-with-pointfree-programming)
 
-
 ## Argument Order
 
 - Ensure curried functions have their least specific arguments last
@@ -316,3 +315,50 @@ const names = customMap(pickName)(people)
 - In this `customMap()` function the callback comes first so the data can be last
 - Nice demo of the `()()` invocation pattern
 
+## Composition
+
+- The preference for small, unary functions must require some form of stitching together functions to achieve a useful effect
+
+```js
+const scream = str => str.toUpperCase()
+const exclaim = str => `${str}!`
+const repeat = str => `${str} ${str}`
+
+repeat(exclaim(scream('I love egghead'))) 
+```
+- Nesting allows this, but this gets to be an eyesore
+
+```js
+const compose = (...fns) => x => fns.reduceRight((acc, fn) => fn(acc), x)
+const withEnthusiasm = compose(repeat, exclaim, scream)
+withEnthusiasm('I love egghead')
+```
+- A higher-order `compose` function is a common way to coordinate multiple functions into a single executable
+  - This can take any number of functions and will return a composed function (`withEnthusiasm`) that can will invoke each of the individual functions one-by-one
+- Course notes that calling these from right-to-left is common because it follows the _mathematical model of composition_
+
+## Debugging compositions
+
+```js
+const bookTitles = [
+  'The Culture Code',
+  'Designing Your Life', 
+  'Algorithms to Live By'
+]
+
+const trace = msg => x => (console.log(msg, x), x)
+
+const slugify = compose(
+  join('-'),
+  map(lowerCase),
+  map(split(' ')),
+  trace('before split')
+)
+
+const slugs = slugify(bookTitles)
+```
+
+> Remember with compositions we work from right to left, or bottom to up, hence [before split]
+
+- `trace()` utility function allows us to pass in a message and log out the argument value at a certain point in the composition
+  - Makes use of the [comma operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Comma_Operator)
