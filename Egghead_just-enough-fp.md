@@ -152,7 +152,7 @@ console.log(ig1 === ig2) // false
   - Maybe the "metaphor" is just throwing me off. `ImmutableGlass` describes something very different than a real-world glass
   - Makes the concept easy to remember though. Would be a cool sci-fi object
 - Suppose this is what Redux state changes are, and why we can time travel through each state change
-  - Each state change has its own reference / unique data structure have their own 
+  - Each state change has its own reference / unique data structure
 - Also can see how this follows the expectations of a pure function
   - `ig1.takeDrink(20)` will always return the same value, whereas `mg1.takeDrink(20)` will differ each time as the amount decreases 
 
@@ -209,14 +209,14 @@ const arr2 = [4, 5, 6]
 console.log(getSquares(arr1)) // [1, 4, 9]
 console.log(getSquares(arr2)) // [16, 25, 36]
 ```
-- Nice demo where we can define the callback in one place and apply it via the second curried function (`getSquares`)
+- Nice example where we can define the callback in one place and apply it via the second curried function (`getSquares`)
 
 ## Partial Application 
 
 > The main benefit of partial application is our ability to delay the evaluation of a function while still supplying some of the arguments to be stored and reused throughout our application.
 
 - Interesting concept, I suppose this is just a practical application of JS closures
-- I've used closures strategically before via function values, but not via curried, unary functions like this
+- I've used closures before via function values, but not via curried, unary functions like this
 
 ```js
 const getFromAPI = baseURL => endPoint => callback =>
@@ -263,7 +263,7 @@ arr.map(x => x * 2)
 
 ```js
 function double(x) {
-  return x *2
+  return x * 2
 }
 
 arr.map(double)
