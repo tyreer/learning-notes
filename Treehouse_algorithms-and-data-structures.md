@@ -1,13 +1,15 @@
-# Introduction to algorithms
+# Algorithms and Data Structures Track
+- https://teamtreehouse.com/tracks/algorithms-and-data-structures
 
+## Course 1: Introduction to Algorithms
 - https://teamtreehouse.com/library/introduction-to-algorithms
 
-## Search algorithms intro
+ ### Search algorithms
 
 - Linear/sequential/simple search
 - Binary search
 
-### Algorithm guidelines
+ #### Algorithm guidelines
 
 - Clearly defined problem statement, input and output
   - What is input and what will output be
@@ -26,7 +28,7 @@ Before rushing into a solution, first running through the algorithmic guidelines
 - Breaking down a problem into a clear set of smaller problems
 - Each of which can be defined in terms of an input and an output
 
-### Evaluating Linear Search
+ #### Evaluating Linear Search
 
 - Correctness
   - Algorithm is correct every time and with every value
@@ -50,16 +52,16 @@ Before rushing into a solution, first running through the algorithmic guidelines
   - When the search target is the same as the max range of values, the data point reflects the size of the dataset as well as the algorithm's effort
   - Plot number of tries against number of values in the range (shortened to `n`)
 
-### Evaluating Binary Search
+ #### Evaluating Binary Search
 
 - Requires a _sorted, sequential_ set of data
   - In contrast to linear search 
 
-## Time Complexity
+ ### Time Complexity
 
 - Order of growth: measure of how much of an increase occurs in the time it takes to execute an operation as the the input size increases
 
-### Big-O notation
+ #### Big-O notation
 - O = order of magnitude of complexity 
 - (n) = a function of the size
   - measures complexity as the input size grows
@@ -67,7 +69,7 @@ Before rushing into a solution, first running through the algorithmic guidelines
 - Linear search: `O(n)`
 - Binary search: `O(log n)`
 
-### Constant and Logarithmic Time
+ #### Constant and Logarithmic Time
 
 - __Constant time__: `O(1)`
 > The runtime for an algorithm is independent of the size of the data set
@@ -80,7 +82,7 @@ Before rushing into a solution, first running through the algorithmic guidelines
   - Also sometimes `O(ln n)`
   - Also can be referred to as _sublinear_
 
-### Linear and Quadratic Time
+ #### Linear and Quadratic Time
 
 - __Linear time__: `O(n)`
 > The runtime of the algorithm is directly proportional to the size of the data set
@@ -92,14 +94,14 @@ Before rushing into a solution, first running through the algorithmic guidelines
   - Expensive computationally
   - e.g. making a `n x n` board grid that provides coordinates on a map (1,1), (1,2), (1,3), (2,1) ...
 
-### Quasilinear time
+ #### Quasilinear time
 
 - __Quasilinear time__: `O(n log n)`
 > Given a data set of size n, the algorithm executes an n number of operations where each operation runs in log n (logarithmic) time
   - Basically linear times a bit
   - Common in sorting algorithms (e.g. merge sort)
 
-### Exponential time
+ #### Exponential time
 
 - __Polynomial runtimes__: `O(n^k)` 
   - Worse case scenario is `n` to some fixed value `k`
@@ -115,7 +117,7 @@ Before rushing into a solution, first running through the algorithmic guidelines
   - Factorial or combinatorial runtime 
   - `n!`, i.e. `n(n-1)(n-2)...(2)(1)`
 
-### Determining Complexity
+ #### Determining Complexity
 
 - Each step in an algorithm has its own efficiency
 - Binary search has both
@@ -123,9 +125,9 @@ Before rushing into a solution, first running through the algorithmic guidelines
   - logarithmic efficiency (number of times it would need to repeat in the worst case)
 - Can measure by average or worst-case performance
 
-## Algorithms in Code
+ ### Algorithms in Code
 
-### Linear search in code
+ #### Linear search in code
 
 - Not all code is an algorithm
 - To be proper linear search must:
@@ -172,7 +174,7 @@ console.log(linearSearch(arrayOfValues, 10)); // -1
 - Simplest via `findIndex` because the native method serves exactly this problem's input and output requirements
   - `findIndex` will also immediately return if the condition is found, saving the worse case
 
-## Binary search in code
+ ### Binary search in code
 
 __Iterative binary search__
 
@@ -239,7 +241,7 @@ console.log(binarySearch(valuesToSearch, -10)); // -1
 
  ## Recursion and Space Complexity
 
-### Recursive functions
+ #### Recursive functions
 
 - Stopping condition in recursive function is often called a __base case__
 - __Recursive depth__: the number of times a function calls itself
@@ -250,7 +252,7 @@ console.log(binarySearch(valuesToSearch, -10)); // -1
 - Recursion is often preferred to iterative algorithms in functional programming paradigms
   - I think because iterative loops require value mutation
 
-### Space complexity
+ #### Space complexity
 
 - __Space complexity__: A measure of how much working storage, or extra storage, is needed as a  particular algorithm grows
   - Not concerned with the initial memory needed (i.e. my input is 10 vs 100)
@@ -264,7 +266,7 @@ console.log(binarySearch(valuesToSearch, -10)); // -1
   - In a language w/o TCO (like Java or Python), the recursive algorithm also takes _logarithmic space_
 - In the Python example, both the iterative and recursive algorithms have the same time complexity, so the difference in their space complexity (constant vs. logarithmic) makes the iterative algorithms a better implementation 
 
-- I don't _think_ that my JS recursive binary search takes _logarithmic space_ because I'm passing through the same single array rather using  `splice` to make a new array
+- I don't _think_ that my JS recursive binary search takes _logarithmic space_ because I'm passing through the same single array rather using  `slice` to make a new array
     - `dataArray === valuesToSearch` is `true` within the algorithm, so the reference identity of the array should be consistent
     - Good to think through though 
 
@@ -272,3 +274,5 @@ console.log(binarySearch(valuesToSearch, -10)); // -1
   - I believe my binary search algorithm has tail calls
 - __Tail call optimization (TCO)__: a feature some languages have to save memory when running recursive functions
   - https://stackoverflow.com/questions/310974/what-is-tail-call-optimization/310980#310980
+
+## Course 2: Introduction to Data Structures
