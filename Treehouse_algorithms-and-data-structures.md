@@ -276,3 +276,163 @@ console.log(binarySearch(valuesToSearch, -10)); // -1
   - https://stackoverflow.com/questions/310974/what-is-tail-call-optimization/310980#310980
 
 ## Course 2: Introduction to Data Structures
+
+### Array basics
+
+> A data structure is a collection of values and the format they are stored. Data structures model the relationships between the values in the collection as well as the operations applied on the data stored in the structure.
+
+- Homogenous vs. heterogenous structures
+  - Java requires all values stored in an array to be of the same type
+  - Python and JS allow any variety of values to be stored in an array  
+
+- Python calls data structures that are basically arrays `lists`
+
+- Arrays in most languages are _contiguous data structures_ = all values are stored next to one another in memory
+  - Easy to retrieve data 
+  - Runtime more likely to be constant
+
+- _Non contiguous data structures_ = data structure stores a value and a reference to where the next value is 
+  - To retrieve next value, must follow the reference (_pointer_) to the next block of memory
+  - Adds runtime overhead
+
+- In a heterogenous data structure (e.g. Python `list`): hard for compiler to allocate contiguous memory of the correct size because different types (e.g. `string`, `number`) can require different amounts of space in memory
+  - Python gets around this by allocating contiguous memory blocks with pointer references to the values (pointers are always the same size)
+
+- Only first memory block location needs to be held in memory
+  - Because of contiguous memory, the index of an array can be used to determine which block of memory stores the desired value
+  - Only the first index value is stored, while the other values can be calculated at runtime using an offset
+  - Starting memory block + index
+  - Error if attempting to access an index outside the array / range of contiguous memory blocks
+
+### JavaScript Arrays
+
+- Does not have an explicit `array` type, but an `Array` object, which is a _list like_ object
+  - Has special constructor and accessor methods
+  - _Prototype_ has traversal and mutation operations
+- Heterogenous and non-contiguous data structures
+
+> arrays are regular JavaScript objects with syntactic sugar
+
+### Array Search, Insert, Delete
+
+- __Search__ in an array is a _linear time_ operation
+  - Most languages will do an iterative search because it's typically less expensive than both a sort and binary search together
+- __Insert__ = _linear runtime_ because every item in the array needs to be shifted one index over 
+    - e.g. Adding a value to the beginning of an array
+- __Appending__ = _constant time_ because we're just adding a new index to the end 
+  - _Ammortized constant space complexity_ = Python has a growth pattern for its list type (e.g. 4, 8, 16), so resizing the list when adding a single value may actually have a greater than constant space complexity
+  - But it averages to constant
+- __Delete__ = upper bound of `O(n)` or _linear runtime_ because in the worst case, every item in the array needs to be shifted one index over 
+- In sum: 
+  - arrays are good at accessing and reading values takes place in constant time
+  - arrays aren't great at inserting or deleting, which take place in linear time
+
+## Building a Linked List
+
+- Linked lists are better than arrays at insertions and deletions
+  - Good for a task that requires a lot of insertion and deletion and not much searching (which they're slow at) 
+- __Head and tail nodes__
+  - Memory typically only keeps a reference to the head node
+  - Each node has a value and a pointer to the next value
+  - Except _tail_, which has no pointer
+- Singly- or doubly-linked lists 
+    - Reference to only next node or also the one before
+- Linked lists are _non-contiguous_ data structures
+  - Each node is stored in a random memory location
+  - Each node had a reference to the next node's location
+
+```js
+class Node {
+  constructor(value) {
+    this.value = value;
+    this.nextNode = null;
+  }
+}
+
+class SinglyLinkedList {
+  constructor(head = null) {
+    this.head = head;
+    this.size = 0;
+  }
+
+  isEmpty() {
+    return this.head === null;
+  }
+
+  getLength() {
+    let current = this.head;
+    let count = 0;
+
+    while (current) {
+      count++;
+      current = current.nextNode;
+    }
+    return count;
+  }
+
+  add(value) {
+    // Adds a new node to the head
+    // Takes constant time: O(1)
+    const nodeToAdd = new Node(value);
+    nodeToAdd.nextNode = this.head;
+    this.head = nodeToAdd;
+  }
+
+  search(target) {
+    // Takes linear time: O(n)
+    let current = this.head;
+    let foundNode = null;
+
+    while (current && foundNode === null) {
+      if (current.value === target) {
+        foundNode = current;
+      }
+      current = current.nextNode;
+    }
+    return foundNode;
+  }
+}
+
+const myLinkedList = new SinglyLinkedList();
+myLinkedList.add(1);
+myLinkedList.add(2);
+myLinkedList.add(3);
+
+console.log(myLinkedList.getLength()); // 3
+console.log(myLinkedList.search(2)); // Node { value: 2, nextNode: Node { value: 1, nextNode: null } }
+```
+- First stab implementation mainly reproducing the Python code example from Treehouse
+- Interesting to compare with an object focused JS linked list: https://github.com/tyreer/learning-notes/blob/master/Egghead_data-structures-and-algorithms-in-js.md#linked-list-data-structure-in-javascript 
+
+### Adding Nodes to a Linked List
+
+- Actual __insert__ is anywhere in the list
+  - Focusing now on only __prepend__ and __append__
+  - To insert at the end of a list, need a reference to the tail
+
+```js
+  insert(value, index) {
+    let position = index;
+    let current = this.head;
+
+    if (index === 0) {
+      this.add(nodeToAdd);
+    }
+
+    if (index > 0) {
+      const nodeToAdd = new Node(value);
+
+      while (position > 1) {
+        position--;
+        current = current.nextNode;
+      }
+
+      let previous = current;
+      let next = current.nextNode;
+
+      previous.nextNode = nodeToAdd;
+      nodeToAdd.nextNode = next;
+    }
+  }
+  ```
+  - `position > 1` is key stopping condition
