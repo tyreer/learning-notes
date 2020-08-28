@@ -441,8 +441,8 @@ console.log(myLinkedList.search(2)); // Node { value: 2, nextNode: Node { value:
 
   - Break array into single-element arrays
   - Sort and merge arrays at the same time to build back up the original array length / members
+  - Goes recursively down the left half of the original array, then the right half, finally merging the two sorted halves
   - Overall, this results in fewer sort operations than sorting the list as a whole
-  - https://medium.com/javascript-in-plain-english/javascript-merge-sort-3205891ac060
 
   - Note that in the Python example, the `slice` makes the algorithm much more expensive
     - `O(kn log n)` where `k` is the number of items in the lists being split
@@ -451,15 +451,6 @@ console.log(myLinkedList.search(2)); // Node { value: 2, nextNode: Node { value:
     - Trade off is same as earlier lesson: mutating variables vs a more functional execution
 
 ```js
-function split(values){
-  // Takes overall O(log n) time
-  const middleIndex = Math.floor(values.length / 2);
-  const leftValues = values.slice(0, middleIndex);
-  const rightValues = values.slice(middleIndex);
-
-  return [leftValues, rightValues];
-}
-
 // Overall runtime will be split + merge: O(n log n)
 function mergeSort(values) {
   // Base case or stopping condition that will end recursion
@@ -471,6 +462,15 @@ function mergeSort(values) {
 
   // Recursively break down array
   return merge(mergeSort(leftValues), mergeSort(rightValues));
+}
+
+function split(values){
+  // Takes overall O(log n) time
+  const middleIndex = Math.floor(values.length / 2);
+  const leftValues = values.slice(0, middleIndex);
+  const rightValues = values.slice(middleIndex);
+
+  return [leftValues, rightValues];
 }
 
 function merge(left, right) {
@@ -499,5 +499,6 @@ function merge(left, right) {
 
 const myArray = [11, 2, 44, 4, 555, 6, 7];
 
-console.log(mergeSort(myArray));
+console.log(mergeSort(myArray)) // [ 2, 4, 6, 7, 11, 44, 555 ];
 ```
+- This is a mix of the Treehouse Python solution and this helpful reference: https://medium.com/javascript-in-plain-english/javascript-merge-sort-3205891ac060
