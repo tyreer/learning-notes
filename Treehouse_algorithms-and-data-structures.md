@@ -436,3 +436,68 @@ console.log(myLinkedList.search(2)); // Node { value: 2, nextNode: Node { value:
   }
   ```
   - `position > 1` is key stopping condition
+
+  ## The Merge Sort Algorithm
+
+  - Break array into single-element arrays
+  - Sort and merge arrays at the same time to build back up the original array length / members
+  - Overall, this results in fewer sort operations than sorting the list as a whole
+  - https://medium.com/javascript-in-plain-english/javascript-merge-sort-3205891ac060
+
+  - Note that in the Python example, the `slice` makes the algorithm much more expensive
+    - `O(kn log n)` where `k` is the number of items in the lists being split
+    - This seems true of JS also [SO ref](https://stackoverflow.com/a/22615787)
+    - A non recursive, iterative solution would avoid the `k` multiplier
+    - Trade off is same as earlier lesson: mutating variables vs a more functional execution
+
+```js
+function split(values){
+  // Takes overall O(log n) time
+  const middleIndex = Math.floor(values.length / 2);
+  const leftValues = values.slice(0, middleIndex);
+  const rightValues = values.slice(middleIndex);
+
+  return [leftValues, rightValues];
+}
+
+// Overall runtime will be split + merge: O(n log n)
+function mergeSort(values) {
+  // Base case or stopping condition that will end recursion
+  if (values.length <= 1) {
+    return values;
+  }
+
+  const [leftValues, rightValues] = split(values)
+
+  // Recursively break down array
+  return merge(mergeSort(leftValues), mergeSort(rightValues));
+}
+
+function merge(left, right) {
+  // Runs in overall O(n) time
+  // Linear space complexity because operations are not simultaneous 
+  // and only the final merge will require the memory equivalent to the initial value 
+
+  let resultArray = [];
+  let leftIndex = 0;
+  let rightIndex = 0;
+
+  while (leftIndex < left.length && rightIndex < right.length) {
+    if (left[leftIndex] < right[rightIndex]) {
+      resultArray.push(left[leftIndex]);
+      leftIndex++;
+    } else {
+      resultArray.push(right[rightIndex]);
+      rightIndex++;
+    }
+  }
+
+  return resultArray
+    .concat(left.slice(leftIndex))
+    .concat(right.slice(rightIndex));
+}
+
+const myArray = [11, 2, 44, 4, 555, 6, 7];
+
+console.log(mergeSort(myArray));
+```
