@@ -167,3 +167,138 @@ foo( {
 > Named arguments are much more flexible, and attractive from a readability perspective, especially when the function in question can take three, four, or more inputs.
 - Pretty sure this is why we can destructure props in a React component without worrying about the order
   - The `props` object will have keys and any key can be accessed via object destructuring regardless of order
+
+### Function Output
+- In FP, our functions should have an output
+  - Functions should explicitly return a value
+- If not otherwise stated, all JS functions will just return `undefined`, but that default output is more aligned with JS that conducts _procedures_, which we're trying to avoid
+- To return multiple values, we can use an object or an array
+  - Consider if there needs to be multiple returned objects though, or if small, simple unary functions would be an option
+
+> Collecting multiple values into an array (or object) to return, and subsequently destructuring those values back into distinct assignments, is a way to transparently express multiple outputs for a function.
+
+### [Early returns](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch2.md/#early-returns)
+- Caution to avoid multiple `return`s that impose an implicit logic to a function
+  - Suggestion to be as _explicit_ as possible
+  - Code sample where multiple `return`s make tracing the function's output tricky
+  - Refactored code is more verbose, but has clear, explicit _flow control_ via `if` statements
+- Point that `return` as a means of flow control isn't always clear
+
+### Functions of functions 
+- __Higher order functions__ are functions that treat other functions as values
+
+### Keeping Scope
+
+```js
+function formatter(formatFn) {
+    return function inner(str){
+        return formatFn( str );
+    };
+}
+
+var lower = formatter( function formatting(v){
+    return v.toLowerCase();
+} );
+
+var upperFirst = formatter( function formatting(v){
+    return v[0].toUpperCase() + v.substr( 1 ).toLowerCase();
+} );
+
+lower( "WOW" );             // wow
+upperFirst( "hello" );      // Hello
+```
+- Various examples of closure in this section, but this one is nice
+  - This would be simpler without the `formatter` higher-order function, but this example helps me see how the pattern could be useful given more involved logic
+
+### [Syntax](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch2.md/#syntax)
+
+- Three arguments for naming functions
+```js
+function foo(fn) {
+  console.log( fn.name );
+}
+
+var x = function(){};
+
+foo( x );               // x
+foo( function(){} );    //
+foo(() => {});          //
+```
+
+1: Stack-trace debugging
+- Anonymous function expressions don't receive any name inference when passed as function arguments
+  - This is a common use case, and the lack of a function name means stack traces will only identify this as a "anonymous function"
+
+2: Reliable self-reference
+- Besides debugging, giving a function a syntactic or lexical name is also useful for internal self-reference
+  - Examples with recursion and event binding 
+
+3: Readability
+
+```js
+people.map( function getPreferredName(person){
+    return person.nicknames[0] || person.firstName;
+} )
+```
+- Could easily imagine this being an anonymous arrow function, but Simpson's point is that the name gives a sense of what the mapping function does that will be a helpful clue for future devs
+
+```js
+(function IIFE(){
+
+    // You already knew I was an IIFE!
+
+})();
+```
+> You virtually never see IIFEs using names for their function expressions, but they should.
+
+- While it's always a bit of work to find a good name for a function, if we don't we're "trading ease-of-writing for pain-of-reading"
+
+### `this` keyword
+
+- Good to avoid `this` in FP because it operates within functions as an implicit parameter
+  - Nice comparison code below
+  - Prefer explicit inputs
+  - In particular this helps when _wiring multiple functions together_, which is very hard if the functions rely on `this`
+
+```js
+function sum() {
+    return this.x + this.y;
+}
+
+var context = {
+    x: 1,
+    y: 2
+};
+
+sum.call( context );        // 3
+
+context.sum = sum;
+context.sum();              // 3
+
+var s = sum.bind( context );
+s();                        // 3
+```
+- Implicit parameter
+
+```js
+function sum(ctx) {
+    return ctx.x + ctx.y;
+}
+
+var context = {
+    x: 1,
+    y: 2
+};
+
+sum( context );
+```
+- Explicit parameter
+
+### [Summary](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch2.md/#summary)
+- Great summary, worthing clicking over to for recap
+- Functions aren't just a set of things that happen (procedures)
+  - Functions should have explicit input and output
+- Functions within functions can hold a memory of values from their outer scope (_closure_)
+> This is one of the most important concepts in all of programming, and a fundamental foundation of FP.
+- Ask if anonymous functions are actually beneficial 
+- Don't use `this` in FP
