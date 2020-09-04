@@ -64,7 +64,7 @@ else if (fn.length == 3) {
 }
 ```
 
-> For example, imagine a case where an `fn` function reference could expect one, two, or three arguments, but you always want to just pass a variable `x` in the last position:
+> For example, imagine a case where an `fn` function reference could expect one, two, or three arguments, but you always want to just pass a variable `x` in the last position
 
 ```js
 function foo(x,y = 2) { .. }
@@ -86,5 +86,84 @@ foo( 1, 2, 3 );         // 1 2 3 []
 foo( 1, 2, 3, 4 );      // 1 2 3 [ 4 ]
 foo( 1, 2, 3, 4, 5 );   // 1 2 3 [ 4, 5 ]
 ```
-- Simpson likes _gather_ for the `...` operator (aka, _rest_ or _spread_)
-  - I've used as _rest_ to destructure some props/parameters in a React component and capture all the remaining ones
+- Simpson likes to say `...` _gathers_ in an assignment position (e.g. a parameters list) 
+  - This is sometimes also referred to as _rest_, for "all the rest" 
+  - I've used as _rest_ to destructure some props/parameters in a React component into aliased variables and capture all the remaining ones
+
+```js
+function foo(...args) {
+    // ..
+}
+```
+- `args` here would be an array with __all__ passed arguments
+  - `args.length` will be an accurate count of how many arguments are passed in
+
+
+```js
+function foo(...args) {
+    console.log( args[3] );
+}
+
+var arr = [ 1, 2, 3, 4, 5 ];
+
+foo( ...arr );                      // 4
+```
+- Nice simple demo how `...` behaves _symmetrically_
+  - In the function declaration, `foo(...arr)` is _gathering_ all parameters into a single array (__assignment position__)
+  - In the call, `foo(...arr)` is spreading the `arr` array to individually pass in each value as an argument (__value-list position__)
+
+
+### Parameter destructuring
+
+```js
+function foo( [x,y,...args] = [] ) {
+    // ..
+}
+
+foo( [1,2,3] );
+```
+- Model of naming the first elements in an array and _gathering_ all the rest as `args`
+  - Left-side `[]` array brackets in parameter parenthesis indicates destructuring
+
+### The Importance of Declarative Style
+
+```js
+function foo(params) {
+    var x = params[0];
+    var y = params[1];
+    var args = params.slice( 2 );
+
+    // ..
+}
+```
+- The same operation as in the previous code sample but in an __imperative style__
+- Key benefit of __declarative style__ is focusing on the _output_ or desired end state
+- In contrast, in this imperative code we need to mentally execute each step to understand the outcome
+  - The destructuring and `gather` operator allow readers of our code to focus on the outcome rather than _how_ the outcome is arrived at
+  - It hides some of the details, which results in more focused, readable code
+
+> Wherever possible, and to whatever degrees our language and our libraries/frameworks will let us, we should be striving for declarative, self-explanatory code.
+
+
+### [Named Arguments](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch2.md/#named-arguments)
+
+```js
+function foo( {x,y} = {} ) {
+    console.log( x, y );
+}
+
+foo( {
+    y: 3
+} );  
+// undefined 3
+```
+- At the `foo` __call-site__ we don't need to worry about `x`
+  - i.e. We don't need to pass in `x: undefined` to match the destructuring order of the parameters
+  - _Parameter object destructuring_ is a powerful JS tool here
+  - Some other languages have __named arguments__ that allow you to label arguments with the parameter they should map to at the call-site (not JS!)
+- In FP, a function that only takes in a single argument is easier to compose with another function's single output
+- Also a point on __unordered parameters__
+  - Order of the destructuring or object argument keys doesn't matter
+> Named arguments are much more flexible, and attractive from a readability perspective, especially when the function in question can take three, four, or more inputs.
+- Pretty sure this is why we can destructure props in a React component without worrying about the order
+  - The `props` object will have keys and any key can be accessed via object destructuring regardless of order
