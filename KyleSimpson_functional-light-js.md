@@ -302,3 +302,195 @@ sum( context );
 > This is one of the most important concepts in all of programming, and a fundamental foundation of FP.
 - Ask if anonymous functions are actually beneficial 
 - Don't use `this` in FP
+
+
+## [Chapter 3: Managing Function Input](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md)
+
+### All For One
+
+```js
+function unary(fn) {
+    return function onlyOneArg(arg){
+        return fn( arg );
+    };
+}
+```
+- Interesting simple utility function that will ignore all but the first argument
+- Good example also where "many FPers" would prefer arrow syntax
+  - Argument that the terseness is at the cost of readability + clear closure boundaries (via brackets) 
+
+```js
+["1","2","3"].map( parseInt );
+// [1,NaN,NaN]
+
+["1","2","3"].map( unary( parseInt ) );
+// [1,2,3]
+```
+- Nice model of why `unary` could be useful
+  - In the first, erroneous case, `map` is providing the index as a second (radix) argument to `parseInt`
+  - The `unary` utility helps to avoid this by ensuring only the first argument (the array value) is passed to `parseInt`
+
+### One on One
+
+```js
+function identity(v) {
+    return v;
+}
+
+// or the ES6 => arrow form
+var identity =
+    v =>
+        v;
+```
+- Key idea is that functions that seem so simple they could be useless can in fact be useful in FP
+
+```js
+var words = "   Now is the time for all...  ".split( /\s|\b/ );
+words;
+// ["","Now","is","the","time","for","all","...",""]
+
+words.filter( identity );
+// ["Now","is","the","time","for","all","..."]
+```
+- This is using _coercion_ to make the empty stings return `false` and hence be filtered out
+- Side note: good little regex example:
+  - `\s` = white space
+  - `\b` = word boundary
+- A function like `identity` might be also be used as a default parameter value in case a function isn't passed in
+  - Pretty sure we've got plenty of this in work code base
+  - Also useful as default function for `map` or `reduce` 
+
+### Unchanging One
+
+```js
+function constant(v) {
+    return function value(){
+        return v;
+    };
+}
+
+// or the ES6 => form
+var constant =
+    v =>
+        () =>
+            v;
+```
+- Useful utility when an API requires a function as a parameter
+  - Good example: `.then()` with JS promises
+
+```js
+p1.then( foo ).then( constant( p2 ) ).then( bar );
+```
+- A warning against simply using an anonymous arrow function to return a value in the second `then`
+
+> The arrow function [would be] returning a value from outside of itself, which is a bit worse from the FP perspective 
+
+### [Adapting arguments to parameters](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#adapting-arguments-to-parameters)
+
+- If you can't change a function's signature, utilities can either gather or spread arguments as needed
+
+```js
+function foo(x,y) {
+    console.log( x + y );
+}
+
+function bar(fn) {
+    fn( [ 3, 9 ] );
+}
+
+bar( foo );         // fails
+```
+- `foo` expects two parameters in its signature, but the `[3, 9]` argument will only provide `x`
+
+```js
+function spreadArgs(fn) {
+    return function spreadFn(argsArr){
+        return fn( ...argsArr );
+    };
+}
+
+bar( spreadArgs( foo ) );           // 12
+```
+- Takes me a minute to wrap my head around this
+- `spreadFn` intercepts the `[3, 9]` argument from `bar` (helpfully named `argsArr`) 
+- Then it spreads to into its `fn` parameter (here `foo`)
+- The sequencing of what happens when feels quite zig-zag
+  - But I can see how this could be a powerful utility
+- In __Ramda__ `spreadArgs` is called `apply`
+
+```js
+function gatherArgs(fn) {
+    return function gatheredFn(...argsArr){
+        return fn( argsArr );
+    };
+}
+```
+- You've got a function you want to run, `fn`
+- `gatherArgs` takes that function and says, "Cool, I'll run that function..." 
+  - "BUT I'm going to modify the arguments it receives before running it"
+
+```js
+function combineFirstTwo([ v1, v2 ]) {
+    return v1 + v2;
+}
+
+[1,2,3,4,5].reduce( gatherArgs( combineFirstTwo ) );
+// 15
+```
+- Nice use case for `gatherArgs`
+- `reduce()` will always provide two arguments (`acc, cur`), and `gatherArgs` allows us to use a single argument callback
+
+### [Some now, some later](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#some-now-some-later)
+
+```js
+function partial(fn,...presetArgs) {
+    return function partiallyApplied(...laterArgs){
+        return fn( ...presetArgs, ...laterArgs );
+    };
+}
+```
+- Super interesting and elegant
+- __Partial application__ utility that holds onto a core function in closure and any number of arguments initially passed in
+- Then returns a function that will accepts any subsequent arguments, combine them with the initial ones and call the core function 
+
+```js
+var getPerson = partial( ajax, "http://some.api/person" );
+```
+- Straightforward enough, we've added an endpoint URL and `getPerson` will execute `ajax` with that initial argument and any subsequent ones
+
+```js
+// version 1
+var getCurrentUser = partial(
+    ajax,
+    "http://some.api/person",
+    { user: CURRENT_USER_ID }
+);
+
+// version 2
+var getCurrentUser = partial( getPerson, { user: CURRENT_USER_ID } );
+```
+- Pretty interesting, version 2 adds to an already partially applied function
+- By reusing something already defined, version 2 is more of an FP approach
+
+```js
+var getCurrentUser = function outerPartiallyApplied(...outerLaterArgs){
+    var getPerson = function innerPartiallyApplied(...innerLaterArgs){
+        return ajax( "http://some.api/person", ...innerLaterArgs );
+    };
+
+    return getPerson( { user: CURRENT_USER_ID }, ...outerLaterArgs );
+}
+```
+- Unpacked version 2 looks a bit like the above
+  - Think `...innerLaterArgs` is `{ user: CURRENT_USER_ID }`
+- Simpson notes that the extra layer of wrapping may seem weird and wrong, but it's the kind of thing we'll want to get comfortable with in FP
+
+```js
+function add(x,y) {
+    return x + y;
+}
+
+[1,2,3,4,5].map( partial( add, 3 ) );
+// [4,5,6,7,8]
+```
+- The `partial` utility here allows us to make use of the value argument `map` will provide and combine it with an initial argument `3`
