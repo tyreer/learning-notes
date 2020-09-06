@@ -229,6 +229,23 @@ foo(() => {});          //
 - Anonymous function expressions don't receive any name inference when passed as function arguments
   - This is a common use case, and the lack of a function name means stack traces will only identify this as a "anonymous function"
 
+```js
+[1, 2].map(v => v.toUpperCase())
+/*
+TypeError: v.toUpperCase is not a function
+at map.v (...)
+at Array.map (<anonymous>)
+*/
+[1, 2].map(function mapper(v) {
+  v.toUpperCase()
+}) 
+/*
+TypeError: v.toUpperCase is not a function 
+at mapper (...)
+at Array.map (<anonymous>)
+*/
+ ```
+
 2: Reliable self-reference
 - Besides debugging, giving a function a syntactic or lexical name is also useful for internal self-reference
   - Examples with recursion and event binding 
@@ -493,4 +510,209 @@ function add(x,y) {
 [1,2,3,4,5].map( partial( add, 3 ) );
 // [4,5,6,7,8]
 ```
-- The `partial` utility here allows us to make use of the value argument `map` will provide and combine it with an initial argument `3`
+- The `partial` utility here allows us to make use of the _value_ argument `map` will provide and combine it with an initial argument `3`
+
+## [One at a Time / Currying](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#one-at-a-time)
+
+>  currying unwinds a single higher-arity function into a series of chained unary functions
+
+- Partial application feels suited to multiple arguments
+  - You provide one or more arguments in the first call and the next call expects _all the remaining_ arguments
+- Curried functions will always only expect a single argument
+  - More ergonomic if working with single arguments
+- Both use closure to remember arguments 
+
+```js
+function curry(fn,arity = fn.length) {
+    return (function nextCurried(prevArgs){
+        return function curried(nextArg){
+            var args = [ ...prevArgs, nextArg ];
+
+            if (args.length >= arity) {
+                return fn( ...args );
+            }
+            else {
+                return nextCurried( args );
+            }
+        };
+    })( [] );
+}
+```
+- Super interesting `curry` utility
+- Good reminder that `fn.length` is not a very reliable indicator of arity, so may need to be explicitly passed in 
+
+`curry`: 
+- takes core function (`fn`) and sets it aside
+- runs `nextCurried` immediately, which is indifferent to the current invocation's input
+  - `nextCurried` exposes the `prevArgs` to the current invocation
+- returns `curried` as the function which a program will invoke
+- uses `arity` as a breaking condition to determine when the core function (`fn`) is to be invoked
+
+```js
+var curriedAjax = curry( ajax );
+var personFetcher = curriedAjax( "http://some.api/person" );
+var getCurrentUser = personFetcher( { user: CURRENT_USER_ID } );
+getCurrentUser( function foundUser(user){ /* .. */ } );
+```
+
+### Visualizing Curried Functions
+
+```js
+// (5 to indicate how many we should wait for)
+var curriedSum = curry( sum, 5 );
+
+curriedSum( 1 )( 2 )( 3 )( 4 )( 5 );        // 15
+```
+- A manual currying (i.e. without the `curry()` utility) could be visualized below
+
+```js
+function curriedSum(v1) {
+    return function(v2){
+        return function(v3){
+            return function(v4){
+                return function(v5){
+                    return sum( v1, v2, v3, v4, v5 );
+                };
+            };
+        };
+    };
+}
+```
+
+```js
+curriedSum = v1 => v2 => v3 => v4 => v5 => sum( v1, v2, v3, v4, v5 );
+```
+- Note that the arrow syntax version looks very similar to mathematical notation or Haskell
+  - One reason people might prefer it
+
+### [Why Currying and Partial Application?](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#why-currying-and-partial-application)
+
+- Great section worth clicking through to
+
+```js
+sum(1)(2)(3) // curried function
+partial(sum,1,2)(3) // partial application 
+sum(1,2,3) // common style
+```
+- Why use FP techniques when the _call-site_ can become more confusing?
+
+- 1: Frees us from needing to know all the arguments for a function call at a single point in the codebase
+- 2: Composition of functions is easier with only one argument (applies to currying)
+- 3: Most critically, splitting out the generalized from the specialized aspects of a function is an abstraction that improves readability
+
+```js
+ajax(
+    "http://some.api/person",
+    { user: CURRENT_USER_ID },
+    function foundUser(user){ /* .. */ }
+);
+```
+- Common style where everything needs to be provided at once
+
+```js
+var getCurrentUser = partial(
+    ajax,
+    "http://some.api/person",
+    { user: CURRENT_USER_ID }
+);
+
+// later
+
+getCurrentUser( function foundUser(user){ /* .. */ } );
+```
+- Partial application allows the call site of `getCurrentUser` to be focused on the specific argument that matters at that point (here the callback)
+  - Avoids "cluttering-up" the call-site with irrelevant info 
+  - Naming `getCurrentUser` is more informative than just calling `ajax(..)` and it abstracts the earlier arguments into a terse summary
+  - Key benefit here is that the two locations are easier to reason about on their own
+
+> That's what abstraction is all about: separating two sets of details -- in this case, the how of getting a current user and the what we do with that user -- and inserting a semantic boundary between them, which eases the reasoning of each part independently.
+
+### [Order Maters](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#order-matters)
+
+- __Argument ordering__ can become a pain when using partial application or currying
+  - For instance, if you want to add the 3rd argument but haven't yet added the 2nd argument into the curried function
+
+```js
+function partialProps(fn,presetArgsObj) {
+    return function partiallyApplied(laterArgsObj){
+        return fn( Object.assign( {}, presetArgsObj, laterArgsObj ) );
+    };
+}
+
+function curryProps(fn,arity = 1) {
+    return (function nextCurried(prevArgsObj){
+        return function curried(nextArgObj = {}){
+            var [key] = Object.keys( nextArgObj );
+            var allArgsObj = Object.assign(
+                {}, prevArgsObj, { [key]: nextArgObj[key] }
+            );
+
+            if (Object.keys( allArgsObj ).length >= arity) {
+                return fn( allArgsObj );
+            }
+            else {
+                return nextCurried( allArgsObj );
+            }
+        };
+    })( {} );
+}
+```
+- Using objects as both the arguments and in parameter destructuring we can overcome ordering specificity
+
+```js
+function foo({ x, y, z } = {}) {
+    console.log( `x:${x} y:${y} z:${z}` );
+}
+
+var f1 = curryProps( foo, 3 );
+var f2 = partialProps( foo, { y: 2 } );
+
+f1( {y: 2} )( {x: 1} )( {z: 3} );
+// x:1 y:2 z:3
+
+f2( { z: 3, x: 1 } );
+// x:1 y:2 z:3
+```
+
+### [No Points](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#no-points)
+
+- __Point-free style__ where _point_ refers to the function's parameter input
+
+```js
+function double(x) {
+    return x * 2;
+}
+
+[1,2,3,4,5].map( function mapper(v){
+    return double( v );
+} );
+```
+- Because the `mapper` and `double` function signatures _are the same_, we can write this in point-free style
+
+> The parameter ("point") v can directly map to the corresponding argument in the double(..) call.
+
+```js
+[1,2,3,4,5].map( double );
+```
+
+### [Summary](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch3.md#summary)
+- Worth clicking through to read
+- One new take away for me is that utilities (`unary(..)`, `identity(..)`, and `constant(..)`) are a key part of FP
+- Seeing some of the hand-rolled utilities is great for learning
+
+```js
+function not(predicate) {
+    return function negated(...args){
+        return !predicate( ...args );
+    };
+}
+
+// or the ES6 => arrow form
+var not =
+    predicate =>
+        (...args) =>
+            !predicate( ...args );
+```
+- In particular this recurring higher-order function pattern is great to become more comfortable with
+- BUT I suspect that Ramda or a similar library would provide me with tried and tested utilities that I'd be happy to use rather than trying to spin my own 
+  - In particular, a utility like the one converting a function to string and then using a regular expression to pull off the argument order, which would only work 80% of the time, seems like something I'd happily leave to a trusted 3rd-party library
