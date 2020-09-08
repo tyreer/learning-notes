@@ -716,3 +716,264 @@ var not =
 - In particular this recurring higher-order function pattern is great to become more comfortable with
 - BUT I suspect that Ramda or a similar library would provide me with tried and tested utilities that I'd be happy to use rather than trying to spin my own 
   - In particular, a utility like the one converting a function to string and then using a regular expression to pull off the argument order, which would only work 80% of the time, seems like something I'd happily leave to a trusted 3rd-party library
+
+
+## [Chapter 4: Composing Functions](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md)
+
+```js
+function words(str) {
+    return String( str )
+        .toLowerCase()
+        .split( /\s|\b/ )
+        .filter( function alpha(v){
+            return /^[\w]+$/.test( v );
+        } );
+}
+
+function unique(list) {
+    var uniqList = [];
+
+    for (let v of list) {
+        if (uniqList.indexOf( v ) === -1 ) {
+            uniqList.push( v );
+        }
+    }
+
+    return uniqList;
+}
+```
+- Two utility functions (or lego blocks)
+
+```js
+var wordsUsed = unique( words( text ) );
+```
+- Utilities used efficiently together
+
+```js
+function uniqueWords(str) {
+    return unique( words( str ) );
+}
+```
+- Functions composed into a new utility (compound lego block)
+
+### Machine Making
+
+```js
+function compose2(fn2,fn1) {
+    return function composed(origValue){
+        return fn2( fn1( origValue ) );
+    };
+}
+
+// or the ES6 => form
+var compose2 =
+    (fn2,fn1) =>
+        origValue =>
+            fn2( fn1( origValue ) );
+```
+
+```js
+var uniqueWords = compose2( unique, words );
+```
+
+- Parameters are right to left
+  - Common convention in FP libraries with a `compose` function
+  - Easiest way to remember is the parameter order matches how the nested functions appear in code
+
+### [General Composition](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md#general-composition)
+
+```js
+function compose(...fns) {
+    return function composed(result){
+        // copy the array of functions
+        var list = [...fns];
+
+        while (list.length > 0) {
+            // take the last function off the end of the list
+            // and execute it
+            result = list.pop()( result );
+        }
+
+        return result;
+    };
+}
+```
+- `while` loop is an interesting little bit of logic
+  - Not sure I'd agree that `result` is the best name for the parameter (why call an input a result?)
+  - `result = list.pop()( result )` is a satisfying line though as it both passes a value into a function and sets the return of that operation as the value to be used in the next step
+
+```js
+function skipLongWords(list) { /* .. */ }
+
+var filterWords = partialRight( compose, unique, words );
+
+var biggerWords = filterWords( skipShortWords );
+var shorterWords = filterWords( skipLongWords );
+
+biggerWords( text );
+// ["compose","functions","together","output","first",
+// "function","input","second"]
+
+shorterWords( text );
+// ["to","two","pass","the","of","call","as"]
+```
+- Pretty cool to see  how useful `partialRight` is here
+  - Suppose that makes sense since the first argument would be the last to be executed in the composed functions
+  - Adding all the final arguments and allowing only the first one to be slotted in
+- Likely wouldn't implement my own `compose` function, would use a library's
+  - But good to follow the logic
+
+### [Reordered Composition](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md#reordered-composition)
+
+- __pipe__ = same as `compose` but left to right
+  - Comes from Unix/Linux _pipe_ (`|` operator)
+  - i.e. `ls -la | grep "foo" | less`
+
+```js
+var pipe = reverseArgs( compose );
+```
+- Can simply reverse arguments as above, or could use `shift` instead of `pop`
+
+```js
+var biggerWords = compose( skipShortWords, unique, words );
+var biggerWords = pipe( words, unique, skipShortWords );
+```
+- Might be a bit more intuitive to read left to right the order the composed functions with execute in
+
+```js
+var filterWords = partialRight( compose, unique, words );
+var filterWords = partial( pipe, words, unique );
+```
+- Partial application also a bit more intuitive without needing to take the mental tick to understand `partialRight`
+
+### [Separation Enables Focus](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md#separation-enables-focus)
+
+- Fantastic section worth sharing directly
+- Abstraction separates a program into subsets
+  - Contained subsets are more readable
+
+> making it possible for the programmer to focus on a manageable subset of the program text at any particular time. 
+
+> We're not abstracting to hide details; we're separating details to improve focus.
+
+- Declarative code abstracts the __what__ from the __how__
+  - At the call-site we can focus on the __what__
+- _Destructuring_ is a good example of increased declarative ability ES6 introduced
+
+```js
+function getData() {
+    return [1,2,3,4,5];
+}
+
+// imperative
+var tmp = getData();
+var a = tmp[0];
+var b = tmp[3];
+
+// declarative
+var [ a ,,, b ] = getData();
+```
+- Array destructing as declarative abstraction
+
+### Composition as Abstraction
+
+```js
+// imperative
+function shorterWords(text) {
+    return skipLongWords( unique( words( text ) ) );
+}
+
+// declarative
+var shorterWords = compose( skipLongWords, unique, words );
+```
+- Abstraction and composition are often framed as something to undertake once code is repeated
+  - i.e., I've used this twice, so I should abstract it
+  - Often abstraction is justified by DRY
+- Point that even if just using a function once, there's a lot of benefit that abstraction can bring by enabling a more declarative code style
+
+```js
+shorterWords( text );
+```
+- Great example where the call-site can be entirely focused on _what_ the program should do, rather than _how_ it does it
+
+### [Revisiting Points](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md#revisiting-points)
+
+```js
+// given: ajax( url, data, cb )
+
+var getPerson = partial( ajax, "http://some.api/person" );
+var getLastOrder = partial( ajax, "http://some.api/order", { id: -1 } );
+
+getLastOrder( function orderFound(order){
+    getPerson( { id: order.personId }, function personFound(person){
+        output( person.name );
+    } );
+} );
+```
+- Starting point with the aim to remove the _points_ of the `order` and `person` parameter references
+  - Steps in example are worth clicking through to
+
+```js
+function prop(name,obj) {
+  return obj[name];
+}
+```
+- Utility helpful in initial aim of removing `person`
+
+```js
+var extractName = partial( prop, "name" );
+```
+- This will now just need to be provided an object (final argument)
+  - Somewhat awkward that the argument `"name"` is coincidentally title the same thing as the parameter value in `prop`
+  - `"name"` could be `"lastName"`
+
+```js
+function setProp(name,obj,val) {
+    var o = Object.assign( {}, obj );
+    o[name] = val;
+    return o;
+}
+```
+- Inverse utility to `prop`
+  - Good model of setting a property and keeping an immutable object (New object via `Object.assign`)
+
+```js
+ output( person.name );
+ // ->
+ var outputPersonName = compose( output, extractName );
+ ```
+ - Composing the new `extractName` function 
+
+ ```js
+ function makeObjProp(name,value) {
+    return setProp( name, {}, value );
+}
+```
+- Feels like a pretty granular function, but suppose it locks in the immutable approach in `setProp`
+  - This is `objOf` in __Ramda__
+
+```js
+var getPerson = partial( ajax, "http://some.api/person" );
+var getLastOrder =
+    partial( ajax, "http://some.api/order", { id: -1 } );
+
+var extractName = partial( prop, "name" );
+var outputPersonName = compose( output, extractName );
+var processPerson = partialRight( getPerson, outputPersonName );
+var personData = partial( makeObjProp, "id" );
+var extractPersonId = partial( prop, "personId" );
+var lookupPerson =
+    compose( processPerson, personData, extractPersonId );
+
+getLastOrder( lookupPerson );
+```
+- Final point-free refactor
+- Uses loads of the composition techniques
+  - (Didn't capture all the steps in these notes. See full chapter)
+
+### [Summary](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch4.md#summary)
+- Function composition in JS relies on functions being unary
+  - This is because JS functions can only return a single value
+  - Each composed function takes a single input from the preceding functions single output
+> Composition is declarative data flow
+- Notion of _routing data through the program_
