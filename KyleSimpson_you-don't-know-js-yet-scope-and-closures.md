@@ -74,3 +74,95 @@ greeting = ."Hi";
 > "Not defined" really means "not declared"—or, rather, "undeclared," as in a variable that has no matching formal declaration in any lexically available scope. By contrast, "undefined" really means a variable was found (declared), but the variable otherwise has no other value in it at the moment, so it defaults to the undefined value.
 
 - Interesting case of assigning to undeclared variables while _not_ in strict mode leading to the creation of a globally scoped variable
+
+
+## [Ch 3: The Scope Chain](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch3.md)
+
+- __Scope chain__: The path by which a lookup goes from its immediate scope context upward/outward through other scopes to resolve a value
+  - i.e. In a nested scope, the path through less nested scopes
+- Nice detailed recap of how 
+  - lexical scope is set during compilation (i.e. meta info about the scope a variable originates from)
+  - runtime lookups benefit from having this info in an AST (runtime optimization to not need to spend time on lookups during execution)
+  - some variables are "undeclared" in a given file (an "unordered marble") because they are defined in another file/module
+
+### Shadowing
+
+- __Shadowing__: Naming a parameter or a variable in a nested scope with the same name as a name in an outer scope  
+
+```js
+var studentName = "Suzy";
+
+function printStudent(studentName) {
+    studentName = studentName.toUpperCase();
+    console.log(studentName);
+}
+
+printStudent("Frank");
+// FRANK
+
+printStudent(studentName);
+// SUZY
+
+console.log(studentName);
+// Suzy
+```
+
+- Demos shadowing of `studentName` and how the look-up process will stop once it finds the first matching variable name
+
+### Function Name Scope
+
+__Function declaration__
+```js
+function myCoolFunc() {
+  ..
+}
+```
+
+__Function expression (anonymous)__
+```js
+var robsCoolFunc = function() {
+  ..
+}
+```
+- A function definition _used as a value_ instead of a standalone declaration 
+- This will not __hoist__ as a function declaration will
+
+__Function expression (named)__
+```js
+var robsCoolFunc = function myCoolFunc() {
+  ..
+}
+```
+
+```js
+var askQuestion = function ofTheTeacher() {
+    console.log(ofTheTeacher);
+};
+
+askQuestion();
+// function ofTheTeacher()...
+
+console.log(ofTheTeacher);
+// ReferenceError: ofTheTeacher is not defined
+```
+- Interesting note that the identifier `ofTheTeacher` is declared _inside_ the function rather than outside
+
+### Arrow Functions
+
+- Arrow functions are __lexically anonymous__
+- They have no declarative form
+
+```js
+var robsCoolFunc = () => {
+  ..
+}
+```
+- Similar to the anonymous function expression in the `function` keyword examples above
+- Common misconception that arrow functions behave differently regarding lexical scope rules
+  - In fact, they behave the same
+  - Will create an inner, nested function scope with or without the optional brackets
+
+### [Chapter summary](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch3.md#backing-out)
+- Great summary worth reviewing
+  - Scope chain, specifically as it related to functions
+  - Shadowing
