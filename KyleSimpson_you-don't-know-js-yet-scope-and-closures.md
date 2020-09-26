@@ -166,3 +166,165 @@ var robsCoolFunc = () => {
 - Great summary worth reviewing
   - Scope chain, specifically as it related to functions
   - Shadowing
+
+
+## [Ch 4: Around the Global Scope](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch4.md)
+
+- In a browser context, 3 main ways separate JS files share identifiers and cooperate with one another
+  - Non-bundled ES Modules: no external scope, just `import`
+  - Some build setups: single shared enclosing scope (function or UMD), "application-wide scope"
+  - Multiple `<script>` tags (or some other build setups): __global scope__
+- Bundled files are often concatenated into a single large file
+  - These techniques are how the different files/modules register a _name_ that other code can reference
+- Some nice illustrative code in the text
+- Global scope is also where
+  - JS exposes built-ins
+  - The environment hosting the JS engine exposes built-ins (`console`, DOM, web platform APIs like `history` or `geolocation`)
+
+### Web Workers
+- Treated as an entirely separate program with its own global scope
+- No access to DOM in global scope
+- Web Worker global object reference is typically `self`
+
+```js
+var studentName = "Kyle";
+let studentID = 42;
+
+function hello() {
+    console.log(`Hello, ${ self.studentName }!`);
+}
+
+self.hello();
+// Hello, Kyle!
+
+self.studentID;
+// undefined
+```
+- Chapter has a couple examples of setting and accessing values in a the global scope
+  - This one demos both the use of `self` and how `var` and `let` relate to global scope differently
+
+### Node
+
+- Every single file Node loads is treated as a module
+- Variables at the top of the file are never in the global scope
+  - In contrast, loading a non-module file in the browser may access and amend the global scope
+- Node defines/provides `global`, which is "a reference to the real global scope object"
+  - `global` is not defined by JS, but by Node as the environment hosting the JS engine
+
+### globalThis
+
+- Introduced in ES2020
+- Funny doc around controversial naming: https://github.com/tc39/proposal-global/blob/master/NAMING.md
+
+```js
+const theGlobalScopeObject =
+    (typeof globalThis != "undefined") ? globalThis :
+    (typeof global != "undefined") ? global :
+    (typeof window != "undefined") ? window :
+    (typeof self != "undefined") ? self :
+    (new Function("return this"))();
+```
+- Simpson and others pushed back against `globalThis` because `this` is potentially misleading
+  - There's no way that `globalThis` would be used for a global/default `this` binding
+  - Instead, it just allows access to the global scope object, which is how he names his mega polyfill above
+  - Recommends using that over `globalThis`
+
+## [Ch 5: The (not So) Secret Lifecycle of Variables](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch5.md)
+
+### Function hoisting
+
+```js
+foo()
+// bar
+
+function foo(){
+  console.log('bar')
+}
+```
+- Why can we call `foo`?
+- Earlier had established that "all identifiers are _registered_ to their respective scopes at compile time"
+  - Identifiers are _created_ every time the scope is entered
+  - But, how does the variable `foo` have a _value_ assigned to it?
+- Answer: __function hoisting__
+> When a function declaration's name identifier is registered at the top of its scope, it's additionally auto-initialized to that function's reference.
+- This is a special characteristic of formal `function` _declarations_
+- Key detail: function hoisting (and `var` variable hoisting) attaches name identifiers to the nearest _function scope_ rather than block scope
+  - If no enclosing function scope, then global scope
+
+### Hoisting: Declaration vs. Expression
+
+```js
+foo()
+// TypeError bc foo === undefined
+
+var foo = function bar(){
+  console.log('baz')
+}
+```
+- Function _expressions_ have their name identifier hoisted, but are not auto initialized to the function value
+  - `TypeError` not a `ReferenceError` (i.e. the identifier is found, but it's `undefined` instead of a function)
+
+- No actual code rearranging occurs with hoisting
+  - Kind of a weird term/metaphor to use
+- Better to think of hoisting as a "compile-time operation" that generates runtime instructions
+- Hoisting is not a runtime behavior
+
+- Interesting point about _multiple declarations_ being permitted with `var` but not `let` (`SyntaxError`)
+  - Could have been permitted technically, but more a case of social engineering to prevent developers from sloppy re-declaration
+
+```js
+const robsVariable;
+// SyntaxError
+```
+- `const` requires that it be initialized to a value
+
+```js
+const robsVariable = 'foo';
+robsVariable = 'bar'
+// TypeError
+```
+- Interesting distinction between `SyntaxError` and `TypeError`
+  - `SyntaxError` = program will not even start executing
+  - `TypeError` = program executes and will throw an error upon reaching the line
+
+### Loops
+
+- Each loop iteration is its own scope instance
+
+```js
+var keepGoing = true;
+while (keepGoing) {
+    let value = Math.random();
+    if (value > 0.5) {
+        keepGoing = false;
+    }
+}
+```
+- `value` is not re-declared because each loop is a new scope 
+- If `value` was a `var` rather than `let`, it would be variable hoisted (to the closest containing function scope or global scope)
+  - Pretty sure this was a subtle gotcha with loops when the iterator name was also used outside the loop block
+
+### Uninitialized variables (TDZ)
+
+```js
+console.log (foo) // undefined
+foo = "bar"
+var foo;
+```
+- `var` is variable hoisted and auto initialized to `undefined`
+
+```js
+console.log (foo) // ReferenceError
+let foo;
+```
+
+```js
+foo = "bar" // ReferenceError
+let foo;
+```
+- `let` and `const` are no auto initialized
+- Code above can be seen as trying to access an identifier in the temporal dead zone (TDZ)
+  - `foo` is hoisted and registered as an identifier, but not initialized 
+- The way to initialize them is through an _assignment attached to a declaration statement_
+
+- __Suggestion to minimize TDZ__: always put `let` and `const` declarations at the top of any scope
