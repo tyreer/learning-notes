@@ -328,3 +328,352 @@ let foo;
 - The way to initialize them is through an _assignment attached to a declaration statement_
 
 - __Suggestion to minimize TDZ__: always put `let` and `const` declarations at the top of any scope
+
+## [Ch 6: Limiting Scope Exposure ](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch6.md)
+
+- Principle of Least Exposure (POLE), typically referenced in a security context, also worth applying to variable scope
+- Several points about hazards that might occur from allowing variables to be used liberally throughout an application
+  - __Unintended dependency__ is a highlight: exposing variables/function unnecessarily invites other developers to use and depend on those _private_ pieces. At first this may seem like no problem, but later refactoring can be made hard if other corners of the code base are dependent on exposed values
+- Advice following POLE for variable scoping:
+  - default to exposing the bare minimum necessary
+  - declare variables in as small and deeply nested scopes as possible
+
+```js
+function diff(x,y) {
+  if (x > y) {
+    let tmp = x;
+    x = y;
+    y = tmp;
+  }
+  return y - x;
+}
+```
+- Simple example to illustrate how `tmp` is scoped to the smallest block possible (rather than declared at the top of `diff`)
+
+### Private values in function scope
+
+```js
+function hideTheCache() {
+  // "middle scope" created by hideTheCache function just to make this variable private
+  var cache = {};
+
+  return factorial;
+
+  // ************* Think this comment line is just to organise private (above) from public (below)
+  
+  function factorial(x) {
+    // inner scope
+    if (x < 2) return 1;
+    if (!(x in cache)) {
+      cache[x] = x * factorial(x-1);
+    }
+    return cache[x];
+  }
+}
+
+var factorial = hideTheCache();
+
+factorial(6);
+//720
+```
+- Interesting function that maintains `cache` values in closure to prevent calculating more than once
+  - Key idea is that `cache` should be private, and a wrapping function's scope can limit scope exposure
+  - Using `var` because it indicates function-level scoping 
+  - `in` operator also worth noting
+  - Nice recursion example too
+
+```js
+var factorial = (function hideTheCache() {
+  ...
+})()
+```
+- Improved design limits `hideTheCache` to within its own function scope
+  - Recap of earlier point that function expressions place their function's name scope _inside_ their own function scope (ch.3, pg. 52) 
+  - This means `hideTheCache` isn't in any outer scope
+  - Useful role for an IIFE to play
+  - But, a warning that "if the code you need to wrap a scope around has `return`, `this`, `break`, or `continue` in it" create the scope with a block rather than an IIFE to avoid messing with those values
+
+### Scoping with Blocks
+
+- `{}` are always blocks, but only become _scopes_ once a `let/const` declaration is involved
+
+```js
+function getNextMonthStart(dateStr) {
+    var nextMonth, year;
+
+    {
+        let curMonth;
+        [ , year, curMonth ] = dateStr.match(
+                /(\d{4})-(\d{2})-\d{2}/
+            ) || [];
+        nextMonth = (Number(curMonth) % 12) + 1;
+    }
+
+    if (nextMonth == 1) {
+        year++;
+    }
+
+    return `${ year }-${
+            String(nextMonth).padStart(2,"0")
+        }-01`;
+}
+console.log(getNextMonthStart("2019-12-25"));   // 2020-01-01
+```
+- Feels odd, but brackets for solely creating a scope are valid
+- As a POLE model, premise is that `curMonth` is not needed outside the block we created
+  - As a design principle, even if the decision seems insignificant at the outset, it may later support maintaining tightly contained scope exposure as a program grows
+  - Idea is to get into the habit as a default
+- Nice regex example also
+  - First space in destructuring is full string match and then the capturing groups
+  - `match` here returns `["2019-12-25", "2019", "12"]`
+
+### `var` and `let`
+- Simpson's is not the most common opinion here
+- Use `var` to clearly signal that a value has function scope as distinct from any block-scoped variables
+- Use `let` when you want block scoping
+- Don't use `var` as the iterator in a loop
+- Curious little note about `catch` creating a block scope since ES3 (1999)
+
+### Function declarations in blocks (FiBs)
+```js
+if(false) {
+   function ask(){
+     ...
+   }
+}
+ask()
+```
+- Somewhat niche explanation as to why this is a liability and can behave inconsistently
+
+```js
+if (typeof Array.isArray != "undefined") {
+    function isArray(a) {
+        return Array.isArray(a);
+    }
+}
+else {
+    function isArray(a) {
+        return Object.prototype.toString.call(a)
+            == "[object Array]";
+    }
+}
+```
+- Temptation here is to try to declare the function only once
+
+- __Advice:__ Avoid FiB entirely
+  - "Never place a function _declaration_ directly inside any block"
+  - Function _expressions_ inside blocks are fine
+
+## [Ch 7: Using Closures ](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch7.md)
+- Only _functions_ have closure
+  - Not objects, not classes (though its functions/methods might)
+- For a closure to be observed, a function must be invoked in a different branch of the scope chain from where it was originally defined
+  - Callback functions are a good example
+
+```js
+  // outer/global scope: RED(1)
+
+function lookupStudent(studentID) {
+    // function scope: BLUE(2)
+
+    var students = [
+        { id: 14, name: "Kyle" },
+        { id: 73, name: "Suzy" },
+        { id: 112, name: "Frank" },
+        { id: 6, name: "Sarah" }
+    ];
+
+    return function greetStudent(greeting){
+        // function scope: GREEN(3)
+
+        var student = students.find(
+            student => 
+            // function scope: ORANGE(4)
+            student.id == studentID
+        );
+
+        return `${ greeting }, ${ student.name }!`;
+    };
+}
+
+var chosenStudents = [
+    lookupStudent(6),
+    lookupStudent(112)
+];
+
+// accessing the function's name:
+chosenStudents[0].name;
+// greetStudent
+
+chosenStudents[0]("Hello");
+// Hello, Sarah!
+
+chosenStudents[1]("Howdy");
+// Howdy, Frank!
+```
+- IF JS didn't have closure, `students` and `studentID` would be garbage collected after `lookupStudents`'s invocation
+
+```js
+function adder(num1) {
+  return function addTo(num2) {
+    return num1 + num2;
+  };
+}
+
+var add10To = adder(10);
+var add200To = adder(10);
+add10To(5);     // 15;
+add200To(5);     // 205;
+```
+- Classic example of closure
+- Illustrating that closure is associated with an __instance of a function__ rather than its definition
+
+### Live Link, Not a Snapshot
+
+```js
+var keeps = [];
+
+for (var i = 0; i < 3; i++) {
+    keeps[i] = function keepI(){
+        // closure over `i`
+        return i;
+    };
+}
+
+keeps[0]();   // 3 -- WHY!?
+keeps[1]();   // 3
+keeps[2]();   // 3
+```
+
+- Common mistake to think of closure as _value oriented_ rather than _variable oriented_ 
+  - Avoid thinking the closure _preserves_ a value from a moment in time w/o it being susceptible to update/reassignment
+  - Above, because `i` is a `var` and function scoped, the variable `i` inside each of the 3 closures are all updated along with the variable
+  - Using `let` will create 3 new `i` variables, one in each loop's scope instance
+
+### Common Closures: Ajax and Events
+
+```js
+function lookupStudentRecord(studentID) {
+    ajax(
+        `https://some.api/student/${ studentID }`,
+        function onRecord(record) {
+            console.log(
+                `${ record.name } (${ studentID })`
+            );
+        }
+    );
+}
+
+lookupStudentRecord(114);
+// Frank (114)
+```
+- Callback `onRecord` executes well after `lookupStudentRecord` has completed, but still persists a privileged access to `studentID` via closure
+
+```js
+function listenForClicks(btn,label) {
+    btn.addEventListener("click",function onClick(){
+        console.log(
+            `The ${ label } button was clicked!`
+        );
+    });
+}
+
+var submitBtn = document.getElementById("submit-btn");
+
+listenForClicks(submitBtn,"Checkout");
+```
+
+> Closure is observed when a function uses variable(s) from outer scope(s) even while running in a scope where those variable(s) wouldn't be accessible.
+
+### [Closure Lifecycle and GC](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch7.md#the-closure-lifecycle-and-garbage-collection-gc)
+
+- Closure can _prevent GC_ on variables your program is otherwise finished with
+  - This can lead to __run away memory usage__
+  - Important to discard of function references when they're no longer needed
+- Longish example in section where `removeEventListener` frees up the function references
+  - Otherwise cannot be GC while event handlers are subscribed
+
+
+```js
+function manageStudentGrades(studentRecords) {
+    var grades = studentRecords.map(getGrade);
+
+    return addGrade;
+
+    // ************************
+
+    function getGrade(record){
+        return record.grade;
+    }
+
+    function sortAndTrimGradesList() {
+        // sort by grades, descending
+        grades.sort(function desc(g1,g2){
+            return g2 - g1;
+        });
+
+        // only keep the top 10 grades
+        grades = grades.slice(0,10);
+    }
+
+    function addGrade(newGrade) {
+        grades.push(newGrade);
+        sortAndTrimGradesList();
+        return grades;
+    }
+}
+
+var addNextGrade = manageStudentGrades([
+    { id: 14, name: "Kyle", grade: 86 },
+    // ..many more records..
+    { id: 6, name: "Sarah", grade: 91 }
+]);
+
+addNextGrade(81);
+addNextGrade(68);
+```
+- Most JS engines will run an optimization to trim down the persisted closure variables to only those actually closed over
+  - But on older and lower-end devices this optimization may not take effect
+  - Therefore, it's safer memory usage to _manually discard_ a large value anywhere in the closure scope rather than relying on closure optimization/GC
+
+```js
+function manageStudentGrades(studentRecords) {
+    var grades = studentRecords.map(getGrade);
+
+    // unset `studentRecords` to prevent unwanted
+    // memory retention in the closure
+    studentRecords = null;
+
+    return addGrade;
+    // ..
+}
+```
+- Here, `studentRecords` could be a large array, and setting it to `null` once we've extracted the values we need via `map` ensures it won't end up consuming memory as long as `addNextGrade` is a function that can be invoked and need to access it's closure values  
+
+
+```js
+function defineHandler(requestURL,requestData) {
+    return function makeRequest(evt){
+        ajax(requestURL,requestData);
+    };
+}
+
+function setupButtonHandler(btn) {
+    var recordKind = btn.dataset.kind;
+    var handler = defineHandler(
+        APIendpoints[recordKind],
+        data[recordKind]
+    );
+    btn.addEventListener("click",handler);
+}
+```
+- FP partial application 
+  - `makeRequest` is a partially applied function that defines its required arguments ahead of time
+  - `evt` is the other part of the "partial" application, even though it's just ignored here
+  - Explicitly limit the closure scope to just the two variables we need
+- DOM `kind` value only needs to be read once per button
+  - Then it's remembered in closure
+
+### [Summary](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch7.md#closer-to-closure)
+- One takeaway: we can bound "scope exposure by encapsulating variable(s) inside function instances, while still making sure the information in those variables is accessible for future use"
+  - Narrow, specialized functions are then cleaner to interact with (don't need to pass in repeat arguments every time)
