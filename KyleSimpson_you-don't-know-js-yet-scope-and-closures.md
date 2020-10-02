@@ -677,3 +677,343 @@ function setupButtonHandler(btn) {
 ### [Summary](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch7.md#closer-to-closure)
 - One takeaway: we can bound "scope exposure by encapsulating variable(s) inside function instances, while still making sure the information in those variables is accessible for future use"
   - Narrow, specialized functions are then cleaner to interact with (don't need to pass in repeat arguments every time)
+
+## [Ch 8: The Module Pattern  ](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/ch8.md)
+
+> understanding and mastering scope and closure is key in properly structuring and organizing our code, especially the decisions on where to store information in variables.
+
+- Modules are a practical means to apply these principles
+- Goal of __encapsulation__: bundle together information (data) and behaviors (functions) that together serve a common purpose
+  - Can be as simple as using single, focused files
+- POLE: "defensively guard against various _dangers_ of scope overexposure"
+  - JS uses lexical scope to enforce _visibility control_
+- Important to not lose site of the __code organization__ benefits
+  - A program is much easier to build and maintain when there are _clear and obvious boundaries and connection points_
+- A goal is to allow users of our modules to interact only with "the minimal public API surface area necessary"
+
+### What is a Module?
+
+- A collection of related data and functions/methods 
+- With a division between hidden private details and public accessible details ("public API")
+- Also, stateful, maintaining and updating information over time 
+
+- __Namespaces (stateless groupings)__
+  - A "utils" object with various functions but _no data_
+  - Without data, the _encapsulation_ implied by a module is missing
+
+- __Data Structures (stateful groupings)__
+  - A collection of both methods and and data, but _without any limitation on visibility_
+    - Can have the data-and-functionality aspect of encapsulation, but not the visibility-control
+
+```js
+var Student = (function defineStudent(){
+    var records = [
+        { id: 14, name: "Kyle", grade: 86 },
+        { id: 73, name: "Suzy", grade: 87 },
+        { id: 112, name: "Frank", grade: 75 },
+        { id: 6, name: "Sarah", grade: 91 }
+    ];
+
+    var publicAPI = {
+        getName
+    };
+
+    return publicAPI;
+
+    // ************************
+
+    function getName(studentID) {
+        var student = records.find(
+            student => student.id == studentID
+        );
+        return student.name;
+    }
+})();
+
+Student.getName(73);   // Suzy
+```
+- An example of a module with grouping of data and functionality, state and access control
+  - "__classic module__" or "revealing module" (early 2000s)
+  - Defining variables in the _outer module definition function_ allows them to be private by default
+  - IIFE here means this will be a singleton, out program only ever needs a single central instance
+  - Module factory is the same function just without the IIFE invocation 
+
+Classic module definition:
+- An outer scope, typically from a module factory function running at least once
+- Inner scope must have at least one piece of hidden information that represents state for the module.
+- Must return on a public API a reference to at least one function that has closure over the hidden module state (so that this state is actually preserved).
+
+### Node CommonJS Modules
+- File based, one file = one module
+- To expose a public API: `module.exports`
+
+```js
+// AVOID: defining a new object for the API
+module.exports = {
+    // ..exports..
+};
+
+// INSTEAD: if multiple exports are assigned at once
+Object.assign(module.exports,{
+   // .. exports ..
+});
+```
+
+### Modern ES Modules (ESM)
+- Worth reviewing points in chapter, but these modules are the most familiar
+
+```js
+import { default as getName, /* .. others .. */ }
+   from "/path/to/students.js";
+```
+- How to import both a default/unnamed and named exports at once
+
+```js
+import * as Student from "/path/to/students.js";
+Student.getName(73);   // Suzy
+```
+- _Namespace import_ is more similar to classic modules used throughout JS's history
+
+## [Appendix A](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/scope-closures/apA.md)
+
+### Anonymous vs Named functions
+
+- Name inference is incomplete
+- Lexical names allow self-reference
+- Names are useful descriptors
+- Arrow functions have no lexical names
+- IIFEs also need names
+
+```js
+function thisIsNamed() {};
+
+var notNamed = function() {};
+
+let config = {
+  data: 100,
+  callbackProperty: /* Not named */ function() {}
+}
+makeRequest(config)
+```
+- Common assumption that the variable being assigned gives an anonymous function a name
+
+```js
+notNamed.name;
+// notNamed
+
+config.callbackProperty.name
+// callbackProperty
+```
+- Inferred names
+
+```js
+function ajax(url,cb) {
+    console.log(cb.name);
+}
+
+ajax("some.url",function(){
+    // ..
+});
+// ""
+```
+- Anonymous function expressions are common in callbacks, which don't allow for inferred names
+
+
+```js
+var config = {};
+
+config.cb = function(){
+    // ..
+};
+
+config.cb.name;
+// ""
+
+var [ noName ] = [ function(){} ];
+noName.name
+// ""
+```
+- Name inference does not apply with variations on function assignments as above
+- Would need to be really careful to try to avoid name inference blind spots
+  - Just not worth the effort, better to prefer named functions
+
+### Named functions and self reference
+
+```js
+// broken
+runOperation(function(num){
+    if (num <= 1) return 1;
+    return num * oopsNoNameToCall(num - 1);
+});
+
+// also broken
+btn.addEventListener("click",function(){
+   console.log("should only respond to one click!");
+   btn.removeEventListener("click",oopsNoNameHere);
+});
+```
+- Recursion and event handling really benefit from/rely on having a lexical name identifier
+
+### Named functions and descriptors
+
+```js
+[ 1, 2, 3, 4, 5 ].filter(function(v){
+    return v % 2 == 1;
+});
+
+[ 1, 2, 3, 4, 5 ].filter(function keepOnlyOdds(v){
+    return v % 2 == 1;
+});
+```
+
+> There's just no reasonable argument to be made that omitting the name `keepOnlyOdds` from the first callback more effectively communicates to the reader the purpose of this callback
+
+- Asking the reader of your code (and remember that might be you months later!) to mentally execute the logic and infer the function's purpose will slow down readers of this code
+- Author of the code needs to figure out a function's purpose once or maybe twice to come up with a name
+  - _Readers of the code_ may need to figure out the purpose dozens+ times over the life of a code base
+
+```js
+lookupTheRecords(someData)
+.then(function extractSalesRecords(resp){
+   return resp.allSales;
+})
+.then(storeRecords);
+```
+- `extractSalesRecords`'s role is to describe the purpose of the `then` function
+- If a name is hard to come up with, consider the function
+  - Is it poorly designed?
+  - Does it do too much and could be broken up into more focused functions?
+- Nice practical tip that _sometimes it is hard to find a name_ and you don't want to break your larger problem solving focus
+  - Can just us `TODO` as a name and assign a proper name prior to checking code in
+
+### Arrow functions
+
+- Always anonymous
+  - Sometimes written in a way that allows for an inferred name
+- Purpose of arrow functions is that they __don't identify a `this` identifier__
+  - Arrow functions relate to `this` just like any other variable reference, they look up the scope chain to the first place `this` is defined
+  - This is great for avoiding `.bind(this)` to force a function to inherit `this` from an outer function
+  - Makes me wonder how much React class components prior to public class fields syntax (CRA default) drove arrow function adoption (https://reactjs.org/docs/handling-events.html)
+
+### IIFE
+
+```js
+(function(){
+  // conventional IIFE
+})();
+
+(function simpsonAdvocatesNamedIIFEs(){
+  // ..
+})();
+```
+- Mainly for the purpose of indicating intent, Simpson says IIFEs should be named functions
+  - They very rarely are "in the wild"
+
+```js
+var getStudents = (function StoreStudentRecords(){
+    var studentRecords = [];
+
+    return function getStudents() {
+        // ..
+    }
+})();
+```
+- Here the IIFE is providing a private scope to hide a cached variable, so it gets a name to indicate as much
+
+### `const`
+
+> long history of troubles around const confusion in a variety of languages, long before it ever showed up in JS.
+
+- Causes confusion because people assume _value immutability_, but `const` only provides _assignment immutability_
+  - And it's pretty rare to actually face a bug related to variable re-assignment
+  - Ultimately, there's a false sense of security with `const` that does more harm than good
+
+### `var` and `let`
+
+- Should be using both and allowing each to convey a specific semantic meaning
+- They aren't interchangeable 
+
+```js
+function getStudents(data) {
+  var studentRecords = [];
+
+  for (let record of data.records) {
+      let id = `student-${ record.id }`;
+      studentRecords.push({
+          id,
+          record.name
+      });
+  }
+
+  return studentRecords;
+}
+```
+
+`var`
+- Use at top level of function scope since that's the scope it's designed to cover
+- Simpson will use `var` whether the declaration is at top, middle or bottom of the function
+  - In all cases, `var` conveys that the variable is scoped to the function
+
+> You _could_ use `let` in this top-level scope, but it's not the best tool for that job. I also find that if you use `let` everywhere, then it's less obvious which declarations are designed to be localized and which ones are intended to be used throughout the function.
+
+- Distinction between __localized__ vs __function-wide__ declaration is useful
+
+`let`
+- Use within a block
+  - It's designed for that (best tool for the job)
+  - Also conveys to a reader that the declaration is localized
+
+```js
+function commitAction() {
+    do {
+        let result = commit();
+        var done = result && result.code == 1;
+    } while (!done);
+}
+```
+- Another instance where `var` is useful by evading the block scope and allowing `done` to be organized within the loop code (rather than outside it)
+- `var` has a similar utility with the blocks of a `try/catch` 
+
+> Don't just throw away a useful tool like `var` because someone shamed you into thinking it wasn't cool anymore. Don't avoid `var` because you got confused once years ago. Learn these tools and use them each for what they're best at.
+
+### Synchronous Callbacks?
+
+```js
+setTimeout(function waitForASecond(){
+    // this is where JS should call back into
+    // the program when the timer has elapsed
+},1000);
+
+// this is where the current program finishes
+// or suspends
+```
+- Term "callback" makes sense in an asynchronous context
+  - There's code that gets called after a period of time when the rest of the program is executed
+  - So there is a "going back" sense that matches "callback"
+
+```js
+function getLabels(studentIDs) {
+    return studentIDs.map(
+        function formatIDLabel(id){
+            return `Student ID: ${
+               String(id).padStart(6)
+            }`;
+        }
+    );
+}
+
+getLabels([ 14, 73, 112, 6 ]);
+```
+- But in a synchronous context, we're calling a function immediately, not returning back to it, as with `formatIDLabel` above
+- Already have established terms for the above: __dependency injection__ or __inversion of control__
+
+> DI can be summarized as passing in necessary part(s) of functionality to another part of the program so that it can invoke them to complete its work.
+- In the case of `map` above, we pass in the _dependency_ required by `map`: a function to call on each iteration
+
+> Inversion of control means that instead of the current area of your program controlling what's happening, you hand control off to another part of the program.
+- Similar and related concept, here we "hand invocation control" to `map` 
+- Fowler idea: IoC = difference between framework and library
+  - with a library, you call its functions
+  - with a framework, it calls your functions
+  - https://martinfowler.com/bliki/InversionOfControl.html
+  
