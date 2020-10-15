@@ -236,6 +236,7 @@ TypeError: v.toUpperCase is not a function
 at map.v (...)
 at Array.map (<anonymous>)
 */
+
 [1, 2].map(function mapper(v) {
   v.toUpperCase()
 }) 
@@ -918,14 +919,14 @@ function prop(name,obj) {
   return obj[name];
 }
 ```
-- Utility helpful in initial aim of removing `person`
+- Utility helpful in initial aim of removing `person` as a point
 
 ```js
 var extractName = partial( prop, "name" );
 ```
 - This will now just need to be provided an object (final argument)
-  - Somewhat awkward that the argument `"name"` is coincidentally title the same thing as the parameter value in `prop`
-  - `"name"` could be `"lastName"`
+  - Somewhat awkward that the argument `"name"` is the same term used as the parameter value in `prop`
+  - The parameter in `prop` could be `propName`
 
 ```js
 function setProp(name,obj,val) {
@@ -977,3 +978,38 @@ getLastOrder( lookupPerson );
   - Each composed function takes a single input from the preceding functions single output
 > Composition is declarative data flow
 - Notion of _routing data through the program_
+
+## [Chapter 5: Reducing Side Effects](https://github.com/getify/Functional-Light-JS/blob/master/manuscript/ch5.md)
+
+### Effects on the Side, Please
+- Ease of readability = clear cause and effect in code
+
+```js
+// Clear cause and effect
+function foo(x) {
+    return x * 2;
+}
+
+var y = foo( 3 );
+```
+
+```js
+// Same functionality but with a side effect and less clear cause and effect relationship
+function foo(x) {
+    y = x * 2;
+}
+
+var y;
+
+foo( 3 );
+```
+- __Free variable__ = a variable a function references outside itself (as above) 
+
+- If you don't know if a function has side effects, then you can't use it without finding out
+  - You need to look at the function definition
+  - If there are side effects, then you also need to understand the other aspect(s) of the program affected
+  - side effects = less ease in readability
+
+> The readability of a side effecting function is worse because it requires more reading to understand the program.
+
+- Nice point that choosing to use side effects means forcing readers of your code to mentally execute your program
