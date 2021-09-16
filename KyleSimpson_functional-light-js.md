@@ -247,6 +247,34 @@ at Array.map (<anonymous>)
 */
  ```
 
+```js
+const people = [{nickNameyNames:['foo']}]
+
+people.map( person => person.nicknames[0] || person.firstName );
+/*
+"TypeError: Cannot read properties of undefined (reading '0')
+    at your-file.js:3:39
+    at Array.map (<anonymous>)
+    at null.js:3:8
+    at https://static.jsbin.com/js/prod/runner-4.1.8.min.js:1:13924
+    at https://static.jsbin.com/js/prod/runner-4.1.8.min.js:1:10866"
+*/
+
+people.map( function getPreferredName(person) {
+  return person.nicknames[0] || person.firstName 
+});
+/*
+"TypeError: Cannot read properties of undefined (reading '0')
+    at getPreferredName (your-file.js:6:26)
+    at Array.map (<anonymous>)
+    at null.js:3:8
+    at https://static.jsbin.com/js/prod/runner-4.1.8.min.js:1:13924
+    at https://static.jsbin.com/js/prod/runner-4.1.8.min.js:1:10866"
+*/
+```
+
+
+
 2: Reliable self-reference
 - Besides debugging, giving a function a syntactic or lexical name is also useful for internal self-reference
   - Examples with recursion and event binding 
